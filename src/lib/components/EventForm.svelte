@@ -1,0 +1,161 @@
+<script>
+	import EntitySearch from './EntitySearch.svelte';
+	import StageSelect from './StageSelect.svelte';
+
+	/** @type {{ event?: import('$lib/types').Event | null, preselectedEntity?: import('$lib/types').EntitySearchResult | null, action?: string }} */
+	let { event = null, preselectedEntity = null, action = '?/save' } = $props();
+
+	let label = $state(event?.label ?? '');
+	let outcome = $state(event?.outcome ?? '');
+	/** @type {import('$lib/types').Stage | null} */
+	let stage = $state(event?.stage ?? null);
+	/** @type {string} */
+	let size = $state(event?.size?.toString() ?? '');
+	/** @type {import('$lib/types').EntitySearchResult | null} */
+	let selectedEntity = $state(preselectedEntity);
+</script>
+
+<form method="POST" {action}>
+	<div class="form-group">
+		<label for="label">Label (URL-friendly identifier)</label>
+		<input
+			type="text"
+			id="label"
+			name="label"
+			bind:value={label}
+			required
+			pattern="[a-z0-9-]+"
+			title="Lowercase letters, numbers, and hyphens only"
+		/>
+	</div>
+
+	<div class="form-group">
+		<label for="entity">Customer or Workload</label>
+		<EntitySearch bind:selected={selectedEntity} />
+		{#if !selectedEntity}
+			<p class="hint">Start typing to search for a customer or workload</p>
+		{/if}
+	</div>
+
+	<div class="form-group">
+		<label for="outcome">Outcome (required)</label>
+		<textarea
+			id="outcome"
+			name="outcome"
+			bind:value={outcome}
+			required
+			rows="4"
+			placeholder="Describe decisions made and blockers to next stage..."
+		></textarea>
+	</div>
+
+	<div class="form-row">
+		<div class="form-group">
+			<label for="stage">Stage (optional)</label>
+			<StageSelect bind:value={stage} />
+			<input type="hidden" name="stage" value={stage ?? ''} />
+		</div>
+
+		<div class="form-group">
+			<label for="size">Size in USD (optional)</label>
+			<input
+				type="number"
+				id="size"
+				name="size"
+				bind:value={size}
+				min="0"
+				step="1"
+				placeholder="e.g., 100000"
+			/>
+		</div>
+	</div>
+
+	<div class="form-actions">
+		<button type="submit" disabled={!selectedEntity}>{event ? 'Update' : 'Create'} Event</button>
+		<a href="/events" class="btn-cancel">Cancel</a>
+	</div>
+</form>
+
+<style>
+	form {
+		max-width: 600px;
+	}
+
+	.form-group {
+		margin-bottom: 1rem;
+	}
+
+	.form-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+	}
+
+	label {
+		display: block;
+		margin-bottom: 0.25rem;
+		font-weight: 500;
+	}
+
+	input,
+	textarea {
+		width: 100%;
+		padding: 0.5rem;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		font-size: 1rem;
+		font-family: inherit;
+	}
+
+	input:focus,
+	textarea:focus {
+		outline: none;
+		border-color: #0066cc;
+		box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+	}
+
+	.hint {
+		font-size: 0.85rem;
+		color: #666;
+		margin-top: 0.25rem;
+	}
+
+	.form-actions {
+		display: flex;
+		gap: 1rem;
+		margin-top: 1.5rem;
+	}
+
+	button {
+		padding: 0.5rem 1rem;
+		background-color: #0066cc;
+		color: white;
+		border: none;
+		border-radius: 4px;
+		font-size: 1rem;
+		cursor: pointer;
+	}
+
+	button:hover:not(:disabled) {
+		background-color: #0055aa;
+	}
+
+	button:disabled {
+		background-color: #ccc;
+		cursor: not-allowed;
+	}
+
+	.btn-cancel {
+		padding: 0.5rem 1rem;
+		background-color: #f0f0f0;
+		color: #333;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		text-decoration: none;
+		font-size: 1rem;
+	}
+
+	.btn-cancel:hover {
+		background-color: #e0e0e0;
+	}
+</style>

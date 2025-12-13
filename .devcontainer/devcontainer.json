@@ -1,0 +1,40 @@
+{
+	"name": "Pipeline AI",
+	"image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+	"features": {
+		"ghcr.io/itsmechlark/features/postgresql:1": {
+			"version": "17"
+		}
+	},
+	"postCreateCommand": "npm install -g @anthropic-ai/claude-code && npm install && psql -c 'CREATE DATABASE pipeline;' && psql -d pipeline -f src/lib/server/schema.sql && psql -d pipeline -f src/lib/server/seed.sql",
+	"postStartCommand": "pg_isready || pg_ctl start",
+	"forwardPorts": [
+		5173,
+		5432
+	],
+	"portsAttributes": {
+		"5173": {
+			"label": "SvelteKit Dev Server",
+			"onAutoForward": "notify"
+		},
+		"5432": {
+			"label": "PostgreSQL",
+			"onAutoForward": "silent"
+		}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"svelte.svelte-vscode",
+				"mtxr.sqltools",
+				"mtxr.sqltools-driver-pg"
+			],
+			"settings": {
+				"svelte.enable-ts-plugin": true
+			}
+		}
+	},
+	"containerEnv": {
+		"DATABASE_URL": "postgresql:///pipeline?host=/var/run/postgresql"
+	}
+}
