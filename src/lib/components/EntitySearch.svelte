@@ -5,12 +5,12 @@
 	/** @type {import('$lib/types').EntitySearchResult[]} */
 	let results = $state([]);
 	let query = $state('');
-	let isOpen = $state(false);
-	let isLoading = $state(false);
-	let highlightedIndex = $state(-1);
+	let is_open = $state(false);
+	let is_loading = $state(false);
+	let highlighted_index = $state(-1);
 
 	/** @type {ReturnType<typeof setTimeout> | null} */
-	let debounceTimer = null;
+	let debounce_timer = null;
 
 	async function search() {
 		if (query.length < 2) {
@@ -18,7 +18,7 @@
 			return;
 		}
 
-		isLoading = true;
+		is_loading = true;
 		try {
 			const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
 			if (response.ok) {
@@ -28,28 +28,28 @@
 			console.error('Search error:', e);
 			results = [];
 		} finally {
-			isLoading = false;
+			is_loading = false;
 		}
 	}
 
-	function handleInput() {
-		if (debounceTimer) clearTimeout(debounceTimer);
-		debounceTimer = setTimeout(search, 200);
-		isOpen = true;
-		highlightedIndex = -1;
+	function handle_input() {
+		if (debounce_timer) clearTimeout(debounce_timer);
+		debounce_timer = setTimeout(search, 200);
+		is_open = true;
+		highlighted_index = -1;
 	}
 
 	/**
 	 * @param {import('$lib/types').EntitySearchResult} result
 	 */
-	function selectResult(result) {
+	function select_result(result) {
 		selected = result;
 		query = result.name;
-		isOpen = false;
+		is_open = false;
 		results = [];
 	}
 
-	function clearSelection() {
+	function clear_selection() {
 		selected = null;
 		query = '';
 		results = [];
@@ -58,26 +58,26 @@
 	/**
 	 * @param {KeyboardEvent} e
 	 */
-	function handleKeydown(e) {
-		if (!isOpen || results.length === 0) return;
+	function handle_keydown(e) {
+		if (!is_open || results.length === 0) return;
 
 		switch (e.key) {
 			case 'ArrowDown':
 				e.preventDefault();
-				highlightedIndex = Math.min(highlightedIndex + 1, results.length - 1);
+				highlighted_index = Math.min(highlighted_index + 1, results.length - 1);
 				break;
 			case 'ArrowUp':
 				e.preventDefault();
-				highlightedIndex = Math.max(highlightedIndex - 1, 0);
+				highlighted_index = Math.max(highlighted_index - 1, 0);
 				break;
 			case 'Enter':
 				e.preventDefault();
-				if (highlightedIndex >= 0) {
-					selectResult(results[highlightedIndex]);
+				if (highlighted_index >= 0) {
+					select_result(results[highlighted_index]);
 				}
 				break;
 			case 'Escape':
-				isOpen = false;
+				is_open = false;
 				break;
 		}
 	}
@@ -88,27 +88,27 @@
 		<input
 			type="text"
 			bind:value={query}
-			oninput={handleInput}
-			onkeydown={handleKeydown}
-			onfocus={() => (isOpen = true)}
-			onblur={() => setTimeout(() => (isOpen = false), 200)}
+			oninput={handle_input}
+			onkeydown={handle_keydown}
+			onfocus={() => (is_open = true)}
+			onblur={() => setTimeout(() => (is_open = false), 200)}
 			{placeholder}
 			autocomplete="off"
 		/>
 		{#if selected}
-			<button type="button" class="clear-btn" onclick={clearSelection}>&times;</button>
+			<button type="button" class="clear-btn" onclick={clear_selection}>&times;</button>
 		{/if}
-		{#if isLoading}
+		{#if is_loading}
 			<span class="loading">...</span>
 		{/if}
 	</div>
 
-	{#if isOpen && results.length > 0}
+	{#if is_open && results.length > 0}
 		<ul class="results">
 			{#each results as result, i}
 				<li
-					class:highlighted={i === highlightedIndex}
-					onmousedown={() => selectResult(result)}
+					class:highlighted={i === highlighted_index}
+					onmousedown={() => select_result(result)}
 				>
 					<span class="type-badge" class:customer={result.type === 'customer'} class:workload={result.type === 'workload'}>
 						{result.type === 'customer' ? 'C' : 'W'}

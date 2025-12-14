@@ -2,8 +2,8 @@
 	import EntitySearch from './EntitySearch.svelte';
 	import StageSelect from './StageSelect.svelte';
 
-	/** @type {{ event?: import('$lib/types').Event | null, preselectedEntity?: import('$lib/types').EntitySearchResult | null, action?: string }} */
-	let { event = null, preselectedEntity = null, action = '?/save' } = $props();
+	/** @type {{ event?: import('$lib/types').Event | null, preselected_entity?: import('$lib/types').EntitySearchResult | null, action?: string }} */
+	let { event = null, preselected_entity = null, action = '' } = $props();
 
 	let label = $state(event?.label ?? '');
 	let outcome = $state(event?.outcome ?? '');
@@ -12,7 +12,7 @@
 	/** @type {string} */
 	let size = $state(event?.size?.toString() ?? '');
 	/** @type {import('$lib/types').EntitySearchResult | null} */
-	let selectedEntity = $state(preselectedEntity);
+	let selected_entity = $state(preselected_entity);
 </script>
 
 <form method="POST" {action}>
@@ -31,8 +31,8 @@
 
 	<div class="form-group">
 		<label for="entity">Customer or Workload</label>
-		<EntitySearch bind:selected={selectedEntity} />
-		{#if !selectedEntity}
+		<EntitySearch bind:selected={selected_entity} />
+		{#if !selected_entity}
 			<p class="hint">Start typing to search for a customer or workload</p>
 		{/if}
 	</div>
@@ -71,7 +71,7 @@
 	</div>
 
 	<div class="form-actions">
-		<button type="submit" disabled={!selectedEntity}>{event ? 'Update' : 'Create'} Event</button>
+		<button type="submit" disabled={!selected_entity}>{event ? 'Update' : 'Create'} Event</button>
 		<a href="/events" class="btn-cancel">Cancel</a>
 	</div>
 </form>

@@ -1,6 +1,6 @@
 <script>
 	/** @type {{ workload?: import('$lib/types').Workload | null, customers: import('$lib/types').Customer[], action?: string }} */
-	let { workload = null, customers, action = '?/save' } = $props();
+	let { workload = null, customers, action = '' } = $props();
 
 	let label = $state(workload?.label ?? '');
 	let name = $state(workload?.name ?? '');

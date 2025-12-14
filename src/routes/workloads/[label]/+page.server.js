@@ -1,23 +1,23 @@
 import { error, redirect, fail } from '@sveltejs/kit';
 import {
-	getWorkloadByLabel,
-	updateWorkload,
-	deleteWorkload,
-	getAllCustomers,
-	getEventsByWorkload
+	get_workload_by_label,
+	update_workload,
+	delete_workload,
+	get_all_customers,
+	get_events_by_workload
 } from '$lib/server/api.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
-	const workload = await getWorkloadByLabel(params.label);
+	const workload = await get_workload_by_label(params.label);
 
 	if (!workload) {
 		throw error(404, 'Workload not found');
 	}
 
 	const [customers, events] = await Promise.all([
-		getAllCustomers(),
-		getEventsByWorkload(workload.workload)
+		get_all_customers(),
+		get_events_by_workload(workload.workload)
 	]);
 
 	return { workload, customers, events };
@@ -26,15 +26,15 @@ export async function load({ params }) {
 /** @type {import('./$types').Actions} */
 export const actions = {
 	save: async ({ request, params }) => {
-		const formData = await request.formData();
+		const form_data = await request.formData();
 
 		const data = {
-			label: formData.get('label')?.toString() || '',
-			name: formData.get('name')?.toString() || '',
-			customer: formData.get('customer')?.toString() || ''
+			label: form_data.get('label')?.toString() || '',
+			name: form_data.get('name')?.toString() || '',
+			customer: form_data.get('customer')?.toString() || ''
 		};
 
-		const result = await updateWorkload(params.label, data);
+		const result = await update_workload(params.label, data);
 
 		if (result.validation) {
 			return fail(400, {
@@ -43,7 +43,7 @@ export const actions = {
 			});
 		}
 
-		if (result.notFound) {
+		if (result.not_found) {
 			return fail(404, { error: 'Workload not found' });
 		}
 
@@ -56,7 +56,7 @@ export const actions = {
 	},
 
 	delete: async ({ params }) => {
-		const deleted = await deleteWorkload(params.label);
+		const deleted = await delete_workload(params.label);
 
 		if (!deleted) {
 			return fail(404, { error: 'Workload not found' });

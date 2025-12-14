@@ -20,7 +20,7 @@ import { STAGES, REGIONS, SEGMENTS } from '$lib/constants.js';
  * @param {CustomerFormData} data
  * @returns {Validation<import('$lib/types').CustomerInput>}
  */
-export function validateCustomer(data) {
+export function validate_customer(data) {
 	const validation = new Validation();
 
 	if (!data.label?.trim()) validation.add('Label is required', 'label');
@@ -42,7 +42,7 @@ export function validateCustomer(data) {
  * Get the total count of customers
  * @returns {Promise<number>}
  */
-export async function getCustomerCount() {
+export async function get_customer_count() {
 	const result = await query('SELECT COUNT(*) as count FROM customers');
 	return parseInt(result.rows[0].count, 10);
 }
@@ -51,7 +51,7 @@ export async function getCustomerCount() {
  * Get all customers
  * @returns {Promise<import('$lib/types').Customer[]>}
  */
-export async function getAllCustomers() {
+export async function get_all_customers() {
 	const result = await query('SELECT * FROM customers ORDER BY name ASC');
 	return result.rows;
 }
@@ -61,7 +61,7 @@ export async function getAllCustomers() {
  * @param {string} label
  * @returns {Promise<import('$lib/types').Customer | null>}
  */
-export async function getCustomerByLabel(label) {
+export async function get_customer_by_label(label) {
 	const result = await query('SELECT * FROM customers WHERE label = $1', [label]);
 	return result.rows[0] || null;
 }
@@ -71,7 +71,7 @@ export async function getCustomerByLabel(label) {
  * @param {string} id
  * @returns {Promise<import('$lib/types').Customer | null>}
  */
-export async function getCustomerById(id) {
+export async function get_customer_by_id(id) {
 	const result = await query('SELECT * FROM customers WHERE customer = $1', [id]);
 	return result.rows[0] || null;
 }
@@ -87,8 +87,8 @@ export async function getCustomerById(id) {
  * @param {CustomerFormData} data
  * @returns {Promise<CreateCustomerResult>}
  */
-export async function createCustomer(data) {
-	const validation = validateCustomer(data);
+export async function create_customer(data) {
+	const validation = validate_customer(data);
 
 	if (!validation.is_valid()) {
 		return { validation };
@@ -116,17 +116,17 @@ export async function createCustomer(data) {
  * @typedef {object} UpdateCustomerResult
  * @property {import('$lib/types').Customer} [customer]
  * @property {Validation<import('$lib/types').CustomerInput>} [validation]
- * @property {boolean} [notFound]
+ * @property {boolean} [not_found]
  */
 
 /**
  * Update a customer with validation
- * @param {string} currentLabel
+ * @param {string} current_label
  * @param {CustomerFormData} data
  * @returns {Promise<UpdateCustomerResult>}
  */
-export async function updateCustomer(currentLabel, data) {
-	const validation = validateCustomer(data);
+export async function update_customer(current_label, data) {
+	const validation = validate_customer(data);
 
 	if (!validation.is_valid()) {
 		return { validation };
@@ -138,10 +138,10 @@ export async function updateCustomer(currentLabel, data) {
 			 SET label = $1, name = $2, region = $3, segment = $4, industry = $5, updated_at = NOW()
 			 WHERE label = $6
 			 RETURNING *`,
-			[data.label.trim(), data.name.trim(), data.region, data.segment, data.industry.trim(), currentLabel]
+			[data.label.trim(), data.name.trim(), data.region, data.segment, data.industry.trim(), current_label]
 		);
 		if (!result.rows[0]) {
-			return { notFound: true };
+			return { not_found: true };
 		}
 		return { customer: result.rows[0] };
 	} catch (e) {
@@ -159,24 +159,24 @@ export async function updateCustomer(currentLabel, data) {
  * @param {string} label
  * @returns {Promise<boolean>}
  */
-export async function deleteCustomer(label) {
+export async function delete_customer(label) {
 	const result = await query('DELETE FROM customers WHERE label = $1', [label]);
 	return result.rowCount > 0;
 }
 
 /**
  * Search customers by name or label
- * @param {string} searchTerm
+ * @param {string} search_term
  * @param {number} [limit=10]
  * @returns {Promise<import('$lib/types').Customer[]>}
  */
-export async function searchCustomers(searchTerm, limit = 10) {
+export async function search_customers(search_term, limit = 10) {
 	const result = await query(
 		`SELECT * FROM customers
 		 WHERE name ILIKE $1 OR label ILIKE $1
 		 ORDER BY name ASC
 		 LIMIT $2`,
-		[`%${searchTerm}%`, limit]
+		[`%${search_term}%`, limit]
 	);
 	return result.rows;
 }
@@ -197,7 +197,7 @@ export async function searchCustomers(searchTerm, limit = 10) {
  * @param {WorkloadFormData} data
  * @returns {Validation<import('$lib/types').WorkloadInput>}
  */
-export function validateWorkload(data) {
+export function validate_workload(data) {
 	const validation = new Validation();
 
 	if (!data.label?.trim()) validation.add('Label is required', 'label');
@@ -211,7 +211,7 @@ export function validateWorkload(data) {
  * Get the total count of workloads
  * @returns {Promise<number>}
  */
-export async function getWorkloadCount() {
+export async function get_workload_count() {
 	const result = await query('SELECT COUNT(*) as count FROM workloads');
 	return parseInt(result.rows[0].count, 10);
 }
@@ -220,7 +220,7 @@ export async function getWorkloadCount() {
  * Get all workloads with customer info and latest event status
  * @returns {Promise<import('$lib/types').WorkloadWithStatus[]>}
  */
-export async function getAllWorkloads() {
+export async function get_all_workloads() {
 	const result = await query(`
 		SELECT
 			w.*,
@@ -246,7 +246,7 @@ export async function getAllWorkloads() {
  * @param {string} label
  * @returns {Promise<import('$lib/types').WorkloadWithStatus | null>}
  */
-export async function getWorkloadByLabel(label) {
+export async function get_workload_by_label(label) {
 	const result = await query(
 		`
 		SELECT
@@ -275,17 +275,17 @@ export async function getWorkloadByLabel(label) {
  * @param {string} id
  * @returns {Promise<import('$lib/types').Workload | null>}
  */
-export async function getWorkloadById(id) {
+export async function get_workload_by_id(id) {
 	const result = await query('SELECT * FROM workloads WHERE workload = $1', [id]);
 	return result.rows[0] || null;
 }
 
 /**
  * Get workloads by customer UUID
- * @param {string} customerId
+ * @param {string} customer_id
  * @returns {Promise<import('$lib/types').WorkloadWithStatus[]>}
  */
-export async function getWorkloadsByCustomer(customerId) {
+export async function get_workloads_by_customer(customer_id) {
 	const result = await query(
 		`
 		SELECT
@@ -305,7 +305,7 @@ export async function getWorkloadsByCustomer(customerId) {
 		WHERE w.customer = $1
 		ORDER BY w.name ASC
 	`,
-		[customerId]
+		[customer_id]
 	);
 	return result.rows;
 }
@@ -321,8 +321,8 @@ export async function getWorkloadsByCustomer(customerId) {
  * @param {WorkloadFormData} data
  * @returns {Promise<CreateWorkloadResult>}
  */
-export async function createWorkload(data) {
-	const validation = validateWorkload(data);
+export async function create_workload(data) {
+	const validation = validate_workload(data);
 
 	if (!validation.is_valid()) {
 		return { validation };
@@ -350,17 +350,17 @@ export async function createWorkload(data) {
  * @typedef {object} UpdateWorkloadResult
  * @property {import('$lib/types').Workload} [workload]
  * @property {Validation<import('$lib/types').WorkloadInput>} [validation]
- * @property {boolean} [notFound]
+ * @property {boolean} [not_found]
  */
 
 /**
  * Update a workload with validation
- * @param {string} currentLabel
+ * @param {string} current_label
  * @param {WorkloadFormData} data
  * @returns {Promise<UpdateWorkloadResult>}
  */
-export async function updateWorkload(currentLabel, data) {
-	const validation = validateWorkload(data);
+export async function update_workload(current_label, data) {
+	const validation = validate_workload(data);
 
 	if (!validation.is_valid()) {
 		return { validation };
@@ -372,10 +372,10 @@ export async function updateWorkload(currentLabel, data) {
 			 SET label = $1, customer = $2, name = $3, updated_at = NOW()
 			 WHERE label = $4
 			 RETURNING *`,
-			[data.label.trim(), data.customer, data.name.trim(), currentLabel]
+			[data.label.trim(), data.customer, data.name.trim(), current_label]
 		);
 		if (!result.rows[0]) {
-			return { notFound: true };
+			return { not_found: true };
 		}
 		return { workload: result.rows[0] };
 	} catch (e) {
@@ -393,18 +393,18 @@ export async function updateWorkload(currentLabel, data) {
  * @param {string} label
  * @returns {Promise<boolean>}
  */
-export async function deleteWorkload(label) {
+export async function delete_workload(label) {
 	const result = await query('DELETE FROM workloads WHERE label = $1', [label]);
 	return result.rowCount > 0;
 }
 
 /**
  * Search workloads by name or label
- * @param {string} searchTerm
+ * @param {string} search_term
  * @param {number} [limit=10]
  * @returns {Promise<import('$lib/types').WorkloadWithStatus[]>}
  */
-export async function searchWorkloads(searchTerm, limit = 10) {
+export async function search_workloads(search_term, limit = 10) {
 	const result = await query(
 		`
 		SELECT
@@ -425,7 +425,7 @@ export async function searchWorkloads(searchTerm, limit = 10) {
 		ORDER BY w.name ASC
 		LIMIT $2
 	`,
-		[`%${searchTerm}%`, limit]
+		[`%${search_term}%`, limit]
 	);
 	return result.rows;
 }
@@ -449,7 +449,7 @@ export async function searchWorkloads(searchTerm, limit = 10) {
  * @param {EventFormData} data
  * @returns {Validation<import('$lib/types').EventInput>}
  */
-export function validateEvent(data) {
+export function validate_event(data) {
 	const validation = new Validation();
 
 	if (!data.label?.trim()) validation.add('Label is required', 'label');
@@ -461,8 +461,8 @@ export function validateEvent(data) {
 	}
 	if (!data.outcome?.trim()) validation.add('Outcome is required', 'outcome');
 	if (data.stage !== null) {
-		const validStages = STAGES.map((s) => s.value);
-		if (!validStages.includes(/** @type {any} */ (data.stage))) {
+		const valid_stages = STAGES.map((s) => s.value);
+		if (!valid_stages.includes(/** @type {any} */ (data.stage))) {
 			validation.add('Invalid stage', 'stage');
 		}
 	}
@@ -477,7 +477,7 @@ export function validateEvent(data) {
  * Get all events with related entity names
  * @returns {Promise<import('$lib/types').EventWithNames[]>}
  */
-export async function getAllEvents() {
+export async function get_all_events() {
 	const result = await query(`
 		SELECT
 			e.*,
@@ -496,7 +496,7 @@ export async function getAllEvents() {
  * @param {string} label
  * @returns {Promise<import('$lib/types').EventWithNames | null>}
  */
-export async function getEventByLabel(label) {
+export async function get_event_by_label(label) {
 	const result = await query(
 		`
 		SELECT
@@ -515,10 +515,10 @@ export async function getEventByLabel(label) {
 
 /**
  * Get events for a customer
- * @param {string} customerId
+ * @param {string} customer_id
  * @returns {Promise<import('$lib/types').EventWithNames[]>}
  */
-export async function getEventsByCustomer(customerId) {
+export async function get_events_by_customer(customer_id) {
 	const result = await query(
 		`
 		SELECT
@@ -531,17 +531,17 @@ export async function getEventsByCustomer(customerId) {
 		WHERE e.customer = $1
 		ORDER BY e.happened_at DESC
 	`,
-		[customerId]
+		[customer_id]
 	);
 	return result.rows;
 }
 
 /**
  * Get events for a workload
- * @param {string} workloadId
+ * @param {string} workload_id
  * @returns {Promise<import('$lib/types').EventWithNames[]>}
  */
-export async function getEventsByWorkload(workloadId) {
+export async function get_events_by_workload(workload_id) {
 	const result = await query(
 		`
 		SELECT
@@ -554,7 +554,7 @@ export async function getEventsByWorkload(workloadId) {
 		WHERE e.workload = $1
 		ORDER BY e.happened_at DESC
 	`,
-		[workloadId]
+		[workload_id]
 	);
 	return result.rows;
 }
@@ -570,8 +570,8 @@ export async function getEventsByWorkload(workloadId) {
  * @param {EventFormData} data
  * @returns {Promise<CreateEventResult>}
  */
-export async function createEvent(data) {
-	const validation = validateEvent(data);
+export async function create_event(data) {
+	const validation = validate_event(data);
 
 	if (!validation.is_valid()) {
 		return { validation };
@@ -599,17 +599,17 @@ export async function createEvent(data) {
  * @typedef {object} UpdateEventResult
  * @property {import('$lib/types').Event} [event]
  * @property {Validation<import('$lib/types').EventInput>} [validation]
- * @property {boolean} [notFound]
+ * @property {boolean} [not_found]
  */
 
 /**
  * Update an event with validation
- * @param {string} currentLabel
+ * @param {string} current_label
  * @param {EventFormData} data
  * @returns {Promise<UpdateEventResult>}
  */
-export async function updateEvent(currentLabel, data) {
-	const validation = validateEvent(data);
+export async function update_event(current_label, data) {
+	const validation = validate_event(data);
 
 	if (!validation.is_valid()) {
 		return { validation };
@@ -621,10 +621,10 @@ export async function updateEvent(currentLabel, data) {
 			 SET label = $1, customer = $2, workload = $3, outcome = $4, stage = $5, size = $6
 			 WHERE label = $7
 			 RETURNING *`,
-			[data.label.trim(), data.customer, data.workload, data.outcome.trim(), data.stage, data.size, currentLabel]
+			[data.label.trim(), data.customer, data.workload, data.outcome.trim(), data.stage, data.size, current_label]
 		);
 		if (!result.rows[0]) {
-			return { notFound: true };
+			return { not_found: true };
 		}
 		return { event: result.rows[0] };
 	} catch (e) {
@@ -642,18 +642,18 @@ export async function updateEvent(currentLabel, data) {
  * @param {string} label
  * @returns {Promise<boolean>}
  */
-export async function deleteEvent(label) {
+export async function delete_event(label) {
 	const result = await query('DELETE FROM events WHERE label = $1', [label]);
 	return result.rowCount > 0;
 }
 
 /**
  * Search both customers and workloads for EntitySearch component
- * @param {string} searchTerm
+ * @param {string} search_term
  * @param {number} [limit=10]
  * @returns {Promise<import('$lib/types').EntitySearchResult[]>}
  */
-export async function searchEntities(searchTerm, limit = 10) {
+export async function search_entities(search_term, limit = 10) {
 	const result = await query(
 		`
 		(
@@ -684,7 +684,7 @@ export async function searchEntities(searchTerm, limit = 10) {
 		)
 		LIMIT $2
 	`,
-		[`%${searchTerm}%`, limit]
+		[`%${search_term}%`, limit]
 	);
 	return result.rows;
 }

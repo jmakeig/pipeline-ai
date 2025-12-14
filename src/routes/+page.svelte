@@ -14,11 +14,11 @@
 <div class="quick-actions">
 	<a href="/customers" class="card">
 		<h2>Customers</h2>
-		<p>{data.customerCount} total</p>
+		<p>{data.customer_count} total</p>
 	</a>
 	<a href="/workloads" class="card">
 		<h2>Workloads</h2>
-		<p>{data.workloadCount} total</p>
+		<p>{data.workload_count} total</p>
 	</a>
 	<a href="/events/new" class="card">
 		<h2>New Event</h2>

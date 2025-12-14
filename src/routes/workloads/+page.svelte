@@ -1,5 +1,5 @@
 <script>
-	import { getStageInfo, formatCurrency } from '$lib/constants.js';
+	import { get_stage_info, format_currency } from '$lib/constants.js';
 
 	/** @type {{ data: import('./$types').PageData }} */
 	let { data } = $props();
@@ -33,14 +33,14 @@
 					<td>{workload.customer_name}</td>
 					<td>
 						{#if workload.current_stage}
-							{getStageInfo(workload.current_stage)?.label}
+							{get_stage_info(workload.current_stage)?.label}
 						{:else}
 							<span class="no-data">-</span>
 						{/if}
 					</td>
 					<td>
 						{#if workload.current_size}
-							{formatCurrency(workload.current_size)}
+							{format_currency(workload.current_size)}
 						{:else}
 							<span class="no-data">-</span>
 						{/if}

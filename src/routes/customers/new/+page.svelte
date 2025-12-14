@@ -19,7 +19,7 @@
 	</div>
 {/if}
 
-<CustomerForm action="?/default" />
+<CustomerForm />
 
 <style>
 	h1 {

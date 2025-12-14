@@ -24,8 +24,7 @@
 {:else}
 	<WorkloadForm
 		customers={data.customers}
-		workload={data.preselectedCustomer ? { label: '', name: '', customer: data.preselectedCustomer, workload: '', created_at: new Date(), updated_at: new Date() } : null}
-		action="?/default"
+		workload={data.preselected_customer ? { label: '', name: '', customer: data.preselected_customer, workload: '', created_at: new Date(), updated_at: new Date() } : null}
 	/>
 {/if}
 

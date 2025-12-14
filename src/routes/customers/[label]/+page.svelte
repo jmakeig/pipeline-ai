@@ -1,6 +1,6 @@
 <script>
 	import CustomerForm from '$lib/components/CustomerForm.svelte';
-	import { formatDateTime, getStageInfo, formatCurrency } from '$lib/constants.js';
+	import { format_date_time, get_stage_info, format_currency } from '$lib/constants.js';
 
 	/** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */
 	let { data, form } = $props();
@@ -43,10 +43,10 @@
 					<li>
 						<a href="/workloads/{workload.label}">{workload.name}</a>
 						{#if workload.current_stage}
-							<span class="stage-badge">{getStageInfo(workload.current_stage)?.label}</span>
+							<span class="stage-badge">{get_stage_info(workload.current_stage)?.label}</span>
 						{/if}
 						{#if workload.current_size}
-							<span class="size">{formatCurrency(workload.current_size)}</span>
+							<span class="size">{format_currency(workload.current_size)}</span>
 						{/if}
 					</li>
 				{/each}
@@ -62,12 +62,12 @@
 				{#each data.events as event}
 					<li>
 						<div class="event-header">
-							<span class="event-date">{formatDateTime(event.happened_at)}</span>
+							<span class="event-date">{format_date_time(event.happened_at)}</span>
 							{#if event.stage}
-								<span class="stage-badge">{getStageInfo(event.stage)?.label}</span>
+								<span class="stage-badge">{get_stage_info(event.stage)?.label}</span>
 							{/if}
 							{#if event.size}
-								<span class="size">{formatCurrency(event.size)}</span>
+								<span class="size">{format_currency(event.size)}</span>
 							{/if}
 						</div>
 						<p class="event-outcome">{event.outcome}</p>

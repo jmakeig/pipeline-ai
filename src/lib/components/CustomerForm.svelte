@@ -2,7 +2,7 @@
 	import { REGIONS, SEGMENTS } from '$lib/constants.js';
 
 	/** @type {{ customer?: import('$lib/types').Customer | null, action?: string }} */
-	let { customer = null, action = '?/save' } = $props();
+	let { customer = null, action = '' } = $props();
 
 	let label = $state(customer?.label ?? '');
 	let name = $state(customer?.name ?? '');

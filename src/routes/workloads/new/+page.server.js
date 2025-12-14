@@ -1,25 +1,25 @@
 import { redirect, fail } from '@sveltejs/kit';
-import { createWorkload, getAllCustomers } from '$lib/server/api.js';
+import { create_workload, get_all_customers } from '$lib/server/api.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ url }) {
-	const customers = await getAllCustomers();
-	const preselectedCustomer = url.searchParams.get('customer') || '';
-	return { customers, preselectedCustomer };
+	const customers = await get_all_customers();
+	const preselected_customer = url.searchParams.get('customer') || '';
+	return { customers, preselected_customer };
 }
 
 /** @type {import('./$types').Actions} */
 export const actions = {
 	default: async ({ request }) => {
-		const formData = await request.formData();
+		const form_data = await request.formData();
 
 		const data = {
-			label: formData.get('label')?.toString() || '',
-			name: formData.get('name')?.toString() || '',
-			customer: formData.get('customer')?.toString() || ''
+			label: form_data.get('label')?.toString() || '',
+			name: form_data.get('name')?.toString() || '',
+			customer: form_data.get('customer')?.toString() || ''
 		};
 
-		const result = await createWorkload(data);
+		const result = await create_workload(data);
 
 		if (result.validation) {
 			return fail(400, {

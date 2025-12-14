@@ -22,9 +22,9 @@ export const SEGMENTS = ['Select', 'Enterprise', 'SMB'];
  * @param {import('$lib/types').Stage | null} value
  * @returns {import('$lib/types').StageInfo | null}
  */
-export function getStageInfo(value) {
+export function get_stage_info(value) {
 	if (value === null) return null;
-	return STAGES.find(s => s.value === value) || null;
+	return STAGES.find((s) => s.value === value) || null;
 }
 
 /**
@@ -32,7 +32,7 @@ export function getStageInfo(value) {
  * @param {number | null} amount
  * @returns {string}
  */
-export function formatCurrency(amount) {
+export function format_currency(amount) {
 	if (amount === null) return '-';
 	return new Intl.NumberFormat('en-US', {
 		style: 'currency',
@@ -47,7 +47,7 @@ export function formatCurrency(amount) {
  * @param {Date | string} date
  * @returns {string}
  */
-export function formatDate(date) {
+export function format_date(date) {
 	const d = typeof date === 'string' ? new Date(date) : date;
 	return d.toLocaleDateString('en-US', {
 		year: 'numeric',
@@ -61,7 +61,7 @@ export function formatDate(date) {
  * @param {Date | string} date
  * @returns {string}
  */
-export function formatDateTime(date) {
+export function format_date_time(date) {
 	const d = typeof date === 'string' ? new Date(date) : date;
 	return d.toLocaleString('en-US', {
 		year: 'numeric',

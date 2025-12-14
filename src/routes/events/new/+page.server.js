@@ -1,19 +1,19 @@
 import { redirect, fail } from '@sveltejs/kit';
-import { createEvent, getCustomerById, getWorkloadById } from '$lib/server/api.js';
+import { create_event, get_customer_by_id, get_workload_by_id } from '$lib/server/api.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ url }) {
-	const customerId = url.searchParams.get('customer');
-	const workloadId = url.searchParams.get('workload');
+	const customer_id = url.searchParams.get('customer');
+	const workload_id = url.searchParams.get('workload');
 
 	/** @type {import('$lib/types').EntitySearchResult | null} */
-	let preselectedEntity = null;
+	let preselected_entity = null;
 
-	if (workloadId) {
-		const workload = await getWorkloadById(workloadId);
+	if (workload_id) {
+		const workload = await get_workload_by_id(workload_id);
 		if (workload) {
-			const customer = await getCustomerById(workload.customer);
-			preselectedEntity = {
+			const customer = await get_customer_by_id(workload.customer);
+			preselected_entity = {
 				type: 'workload',
 				id: workload.workload,
 				label: workload.label,
@@ -21,10 +21,10 @@ export async function load({ url }) {
 				subtitle: customer?.name || ''
 			};
 		}
-	} else if (customerId) {
-		const customer = await getCustomerById(customerId);
+	} else if (customer_id) {
+		const customer = await get_customer_by_id(customer_id);
 		if (customer) {
-			preselectedEntity = {
+			preselected_entity = {
 				type: 'customer',
 				id: customer.customer,
 				label: customer.label,
@@ -34,43 +34,43 @@ export async function load({ url }) {
 		}
 	}
 
-	return { preselectedEntity };
+	return { preselected_entity };
 }
 
 /** @type {import('./$types').Actions} */
 export const actions = {
 	default: async ({ request }) => {
-		const formData = await request.formData();
+		const form_data = await request.formData();
 
-		const entityType = formData.get('entityType')?.toString() || '';
-		const entityId = formData.get('entityId')?.toString() || '';
-		const stageStr = formData.get('stage')?.toString();
-		const sizeStr = formData.get('size')?.toString().trim();
+		const entity_type = form_data.get('entityType')?.toString() || '';
+		const entity_id = form_data.get('entityId')?.toString() || '';
+		const stage_str = form_data.get('stage')?.toString();
+		const size_str = form_data.get('size')?.toString().trim();
 
 		const data = {
-			label: formData.get('label')?.toString() || '',
-			customer: entityType === 'customer' ? entityId : null,
-			workload: entityType === 'workload' ? entityId : null,
-			outcome: formData.get('outcome')?.toString() || '',
-			stage: stageStr ? parseInt(stageStr, 10) : null,
-			size: sizeStr ? parseFloat(sizeStr) : null
+			label: form_data.get('label')?.toString() || '',
+			customer: entity_type === 'customer' ? entity_id : null,
+			workload: entity_type === 'workload' ? entity_id : null,
+			outcome: form_data.get('outcome')?.toString() || '',
+			stage: stage_str ? parseInt(stage_str, 10) : null,
+			size: size_str ? parseFloat(size_str) : null
 		};
 
-		const result = await createEvent(data);
+		const result = await create_event(data);
 
 		if (result.validation) {
 			return fail(400, {
 				validation: result.validation.toJSON(),
-				values: { ...data, entityType, entityId }
+				values: { ...data, entity_type, entity_id }
 			});
 		}
 
 		// Redirect back to the entity page
-		if (entityType === 'customer') {
-			const customer = await getCustomerById(entityId);
+		if (entity_type === 'customer') {
+			const customer = await get_customer_by_id(entity_id);
 			throw redirect(303, `/customers/${customer?.label}`);
 		} else {
-			const workload = await getWorkloadById(entityId);
+			const workload = await get_workload_by_id(entity_id);
 			throw redirect(303, `/workloads/${workload?.label}`);
 		}
 	}

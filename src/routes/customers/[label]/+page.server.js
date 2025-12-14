@@ -1,23 +1,23 @@
 import { error, redirect, fail } from '@sveltejs/kit';
 import {
-	getCustomerByLabel,
-	updateCustomer,
-	deleteCustomer,
-	getWorkloadsByCustomer,
-	getEventsByCustomer
+	get_customer_by_label,
+	update_customer,
+	delete_customer,
+	get_workloads_by_customer,
+	get_events_by_customer
 } from '$lib/server/api.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
-	const customer = await getCustomerByLabel(params.label);
+	const customer = await get_customer_by_label(params.label);
 
 	if (!customer) {
 		throw error(404, 'Customer not found');
 	}
 
 	const [workloads, events] = await Promise.all([
-		getWorkloadsByCustomer(customer.customer),
-		getEventsByCustomer(customer.customer)
+		get_workloads_by_customer(customer.customer),
+		get_events_by_customer(customer.customer)
 	]);
 
 	return { customer, workloads, events };
@@ -26,17 +26,17 @@ export async function load({ params }) {
 /** @type {import('./$types').Actions} */
 export const actions = {
 	save: async ({ request, params }) => {
-		const formData = await request.formData();
+		const form_data = await request.formData();
 
 		const data = {
-			label: formData.get('label')?.toString() || '',
-			name: formData.get('name')?.toString() || '',
-			region: formData.get('region')?.toString() || '',
-			segment: formData.get('segment')?.toString() || '',
-			industry: formData.get('industry')?.toString() || ''
+			label: form_data.get('label')?.toString() || '',
+			name: form_data.get('name')?.toString() || '',
+			region: form_data.get('region')?.toString() || '',
+			segment: form_data.get('segment')?.toString() || '',
+			industry: form_data.get('industry')?.toString() || ''
 		};
 
-		const result = await updateCustomer(params.label, data);
+		const result = await update_customer(params.label, data);
 
 		if (result.validation) {
 			return fail(400, {
@@ -45,7 +45,7 @@ export const actions = {
 			});
 		}
 
-		if (result.notFound) {
+		if (result.not_found) {
 			return fail(404, { error: 'Customer not found' });
 		}
 
@@ -58,7 +58,7 @@ export const actions = {
 	},
 
 	delete: async ({ params }) => {
-		const deleted = await deleteCustomer(params.label);
+		const deleted = await delete_customer(params.label);
 
 		if (!deleted) {
 			return fail(404, { error: 'Customer not found' });

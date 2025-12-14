@@ -19,7 +19,7 @@
 	</div>
 {/if}
 
-<EventForm preselectedEntity={data.preselectedEntity} action="?/default" />
+<EventForm preselected_entity={data.preselected_entity} />
 
 <style>
 	h1 {

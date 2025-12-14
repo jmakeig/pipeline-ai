@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { searchEntities } from '$lib/server/api.js';
+import { search_entities } from '$lib/server/api.js';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ url }) {
@@ -9,6 +9,6 @@ export async function GET({ url }) {
 		return json([]);
 	}
 
-	const results = await searchEntities(query, 10);
+	const results = await search_entities(query, 10);
 	return json(results);
 }
