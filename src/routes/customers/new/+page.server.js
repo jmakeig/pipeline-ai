@@ -1,37 +1,28 @@
 import { redirect, fail } from '@sveltejs/kit';
-import { createCustomer } from '$lib/server/customers.js';
+import { createCustomer } from '$lib/server/api.js';
 
 /** @type {import('./$types').Actions} */
 export const actions = {
 	default: async ({ request }) => {
 		const formData = await request.formData();
 
-		const label = formData.get('label')?.toString().trim();
-		const name = formData.get('name')?.toString().trim();
-		const region = formData.get('region')?.toString();
-		const segment = formData.get('segment')?.toString();
-		const industry = formData.get('industry')?.toString().trim();
+		const data = {
+			label: formData.get('label')?.toString() || '',
+			name: formData.get('name')?.toString() || '',
+			region: formData.get('region')?.toString() || '',
+			segment: formData.get('segment')?.toString() || '',
+			industry: formData.get('industry')?.toString() || ''
+		};
 
-		if (!label || !name || !region || !segment || !industry) {
-			return fail(400, { error: 'All fields are required' });
-		}
+		const result = await createCustomer(data);
 
-		try {
-			const customer = await createCustomer({
-				label,
-				name,
-				region: /** @type {import('$lib/types').Region} */ (region),
-				segment: /** @type {import('$lib/types').Segment} */ (segment),
-				industry
+		if (result.validation) {
+			return fail(400, {
+				validation: result.validation.toJSON(),
+				values: data
 			});
-			throw redirect(303, `/customers/${customer.label}`);
-		} catch (e) {
-			if (e instanceof Response) throw e;
-			const error = /** @type {Error} */ (e);
-			if (error.message?.includes('unique constraint')) {
-				return fail(400, { error: 'A customer with this label already exists' });
-			}
-			return fail(500, { error: 'Failed to create customer' });
 		}
+
+		throw redirect(303, `/customers/${result.customer?.label}`);
 	}
 };

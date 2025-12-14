@@ -1,7 +1,5 @@
 import { redirect, fail } from '@sveltejs/kit';
-import { createEvent } from '$lib/server/events.js';
-import { getCustomerById } from '$lib/server/customers.js';
-import { getWorkloadById } from '$lib/server/workloads.js';
+import { createEvent, getCustomerById, getWorkloadById } from '$lib/server/api.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ url }) {
@@ -44,46 +42,36 @@ export const actions = {
 	default: async ({ request }) => {
 		const formData = await request.formData();
 
-		const label = formData.get('label')?.toString().trim();
-		const entityType = formData.get('entityType')?.toString();
-		const entityId = formData.get('entityId')?.toString();
-		const outcome = formData.get('outcome')?.toString().trim();
+		const entityType = formData.get('entityType')?.toString() || '';
+		const entityId = formData.get('entityId')?.toString() || '';
 		const stageStr = formData.get('stage')?.toString();
 		const sizeStr = formData.get('size')?.toString().trim();
 
-		if (!label || !entityType || !entityId || !outcome) {
-			return fail(400, { error: 'Label, entity, and outcome are required' });
+		const data = {
+			label: formData.get('label')?.toString() || '',
+			customer: entityType === 'customer' ? entityId : null,
+			workload: entityType === 'workload' ? entityId : null,
+			outcome: formData.get('outcome')?.toString() || '',
+			stage: stageStr ? parseInt(stageStr, 10) : null,
+			size: sizeStr ? parseFloat(sizeStr) : null
+		};
+
+		const result = await createEvent(data);
+
+		if (result.validation) {
+			return fail(400, {
+				validation: result.validation.toJSON(),
+				values: { ...data, entityType, entityId }
+			});
 		}
 
-		const stage = stageStr ? parseInt(stageStr, 10) : null;
-		const size = sizeStr ? parseFloat(sizeStr) : null;
-
-		try {
-			const event = await createEvent({
-				label,
-				customer: entityType === 'customer' ? entityId : null,
-				workload: entityType === 'workload' ? entityId : null,
-				outcome,
-				stage: /** @type {import('$lib/types').Stage | null} */ (stage),
-				size
-			});
-
-			// Redirect back to the entity page
-			if (entityType === 'customer') {
-				const customer = await getCustomerById(entityId);
-				throw redirect(303, `/customers/${customer?.label}`);
-			} else {
-				const workload = await getWorkloadById(entityId);
-				throw redirect(303, `/workloads/${workload?.label}`);
-			}
-		} catch (e) {
-			if (e instanceof Response) throw e;
-			const error = /** @type {Error} */ (e);
-			if (error.message?.includes('unique constraint')) {
-				return fail(400, { error: 'An event with this label already exists' });
-			}
-			console.error('Failed to create event:', error);
-			return fail(500, { error: 'Failed to create event' });
+		// Redirect back to the entity page
+		if (entityType === 'customer') {
+			const customer = await getCustomerById(entityId);
+			throw redirect(303, `/customers/${customer?.label}`);
+		} else {
+			const workload = await getWorkloadById(entityId);
+			throw redirect(303, `/workloads/${workload?.label}`);
 		}
 	}
 };

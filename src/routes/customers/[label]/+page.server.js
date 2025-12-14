@@ -1,7 +1,11 @@
 import { error, redirect, fail } from '@sveltejs/kit';
-import { getCustomerByLabel, updateCustomer, deleteCustomer } from '$lib/server/customers.js';
-import { getWorkloadsByCustomer } from '$lib/server/workloads.js';
-import { getEventsByCustomer } from '$lib/server/events.js';
+import {
+	getCustomerByLabel,
+	updateCustomer,
+	deleteCustomer,
+	getWorkloadsByCustomer,
+	getEventsByCustomer
+} from '$lib/server/api.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
@@ -24,43 +28,33 @@ export const actions = {
 	save: async ({ request, params }) => {
 		const formData = await request.formData();
 
-		const label = formData.get('label')?.toString().trim();
-		const name = formData.get('name')?.toString().trim();
-		const region = formData.get('region')?.toString();
-		const segment = formData.get('segment')?.toString();
-		const industry = formData.get('industry')?.toString().trim();
+		const data = {
+			label: formData.get('label')?.toString() || '',
+			name: formData.get('name')?.toString() || '',
+			region: formData.get('region')?.toString() || '',
+			segment: formData.get('segment')?.toString() || '',
+			industry: formData.get('industry')?.toString() || ''
+		};
 
-		if (!label || !name || !region || !segment || !industry) {
-			return fail(400, { error: 'All fields are required' });
-		}
+		const result = await updateCustomer(params.label, data);
 
-		try {
-			const customer = await updateCustomer(params.label, {
-				label,
-				name,
-				region: /** @type {import('$lib/types').Region} */ (region),
-				segment: /** @type {import('$lib/types').Segment} */ (segment),
-				industry
+		if (result.validation) {
+			return fail(400, {
+				validation: result.validation.toJSON(),
+				values: data
 			});
-
-			if (!customer) {
-				return fail(404, { error: 'Customer not found' });
-			}
-
-			// Redirect to new label if changed
-			if (label !== params.label) {
-				throw redirect(303, `/customers/${label}`);
-			}
-
-			return { success: true };
-		} catch (e) {
-			if (e instanceof Response) throw e;
-			const err = /** @type {Error} */ (e);
-			if (err.message?.includes('unique constraint')) {
-				return fail(400, { error: 'A customer with this label already exists' });
-			}
-			return fail(500, { error: 'Failed to update customer' });
 		}
+
+		if (result.notFound) {
+			return fail(404, { error: 'Customer not found' });
+		}
+
+		// Redirect to new label if changed
+		if (data.label !== params.label) {
+			throw redirect(303, `/customers/${data.label}`);
+		}
+
+		return { success: true };
 	},
 
 	delete: async ({ params }) => {

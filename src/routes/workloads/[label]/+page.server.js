@@ -1,7 +1,11 @@
 import { error, redirect, fail } from '@sveltejs/kit';
-import { getWorkloadByLabel, updateWorkload, deleteWorkload } from '$lib/server/workloads.js';
-import { getAllCustomers } from '$lib/server/customers.js';
-import { getEventsByWorkload } from '$lib/server/events.js';
+import {
+	getWorkloadByLabel,
+	updateWorkload,
+	deleteWorkload,
+	getAllCustomers,
+	getEventsByWorkload
+} from '$lib/server/api.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
@@ -24,35 +28,31 @@ export const actions = {
 	save: async ({ request, params }) => {
 		const formData = await request.formData();
 
-		const label = formData.get('label')?.toString().trim();
-		const name = formData.get('name')?.toString().trim();
-		const customer = formData.get('customer')?.toString();
+		const data = {
+			label: formData.get('label')?.toString() || '',
+			name: formData.get('name')?.toString() || '',
+			customer: formData.get('customer')?.toString() || ''
+		};
 
-		if (!label || !name || !customer) {
-			return fail(400, { error: 'All fields are required' });
+		const result = await updateWorkload(params.label, data);
+
+		if (result.validation) {
+			return fail(400, {
+				validation: result.validation.toJSON(),
+				values: data
+			});
 		}
 
-		try {
-			const workload = await updateWorkload(params.label, { label, name, customer });
-
-			if (!workload) {
-				return fail(404, { error: 'Workload not found' });
-			}
-
-			// Redirect to new label if changed
-			if (label !== params.label) {
-				throw redirect(303, `/workloads/${label}`);
-			}
-
-			return { success: true };
-		} catch (e) {
-			if (e instanceof Response) throw e;
-			const err = /** @type {Error} */ (e);
-			if (err.message?.includes('unique constraint')) {
-				return fail(400, { error: 'A workload with this label already exists' });
-			}
-			return fail(500, { error: 'Failed to update workload' });
+		if (result.notFound) {
+			return fail(404, { error: 'Workload not found' });
 		}
+
+		// Redirect to new label if changed
+		if (data.label !== params.label) {
+			throw redirect(303, `/workloads/${data.label}`);
+		}
+
+		return { success: true };
 	},
 
 	delete: async ({ params }) => {

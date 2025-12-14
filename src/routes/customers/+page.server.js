@@ -1,4 +1,4 @@
-import { getAllCustomers } from '$lib/server/customers.js';
+import { getAllCustomers } from '$lib/server/api.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load() {

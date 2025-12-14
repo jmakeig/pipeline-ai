@@ -1,4 +1,4 @@
-import { getAllWorkloads } from '$lib/server/workloads.js';
+import { getAllWorkloads } from '$lib/server/api.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load() {

@@ -11,8 +11,12 @@
 
 <h1>New Workload</h1>
 
-{#if form?.error}
-	<p class="error">{form.error}</p>
+{#if form?.validation}
+	<div class="errors">
+		{#each form.validation as issue}
+			<p class="error">{issue.message}</p>
+		{/each}
+	</div>
 {/if}
 
 {#if data.customers.length === 0}

@@ -1,6 +1,5 @@
 import { redirect, fail } from '@sveltejs/kit';
-import { createWorkload } from '$lib/server/workloads.js';
-import { getAllCustomers } from '$lib/server/customers.js';
+import { createWorkload, getAllCustomers } from '$lib/server/api.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ url }) {
@@ -14,24 +13,21 @@ export const actions = {
 	default: async ({ request }) => {
 		const formData = await request.formData();
 
-		const label = formData.get('label')?.toString().trim();
-		const name = formData.get('name')?.toString().trim();
-		const customer = formData.get('customer')?.toString();
+		const data = {
+			label: formData.get('label')?.toString() || '',
+			name: formData.get('name')?.toString() || '',
+			customer: formData.get('customer')?.toString() || ''
+		};
 
-		if (!label || !name || !customer) {
-			return fail(400, { error: 'All fields are required' });
+		const result = await createWorkload(data);
+
+		if (result.validation) {
+			return fail(400, {
+				validation: result.validation.toJSON(),
+				values: data
+			});
 		}
 
-		try {
-			const workload = await createWorkload({ label, name, customer });
-			throw redirect(303, `/workloads/${workload.label}`);
-		} catch (e) {
-			if (e instanceof Response) throw e;
-			const error = /** @type {Error} */ (e);
-			if (error.message?.includes('unique constraint')) {
-				return fail(400, { error: 'A workload with this label already exists' });
-			}
-			return fail(500, { error: 'Failed to create workload' });
-		}
+		throw redirect(303, `/workloads/${result.workload?.label}`);
 	}
 };

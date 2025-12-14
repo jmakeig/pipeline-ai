@@ -27,10 +27,12 @@
 			"extensions": [
 				"svelte.svelte-vscode",
 				"mtxr.sqltools",
-				"mtxr.sqltools-driver-pg"
+				"mtxr.sqltools-driver-pg",
+				"dracula-theme.theme-dracula"
 			],
 			"settings": {
-				"svelte.enable-ts-plugin": true
+				"svelte.enable-ts-plugin": true,
+				"workbench.colorTheme": "dracula-theme.theme-dracula"
 			}
 		}
 	},

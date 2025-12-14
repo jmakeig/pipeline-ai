@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { searchEntities } from '$lib/server/events.js';
+import { searchEntities } from '$lib/server/api.js';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ url }) {
