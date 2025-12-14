@@ -42,8 +42,8 @@ export const actions = {
 	default: async ({ request }) => {
 		const form_data = await request.formData();
 
-		const entity_type = form_data.get('entityType')?.toString() || '';
-		const entity_id = form_data.get('entityId')?.toString() || '';
+		const entity_type = form_data.get('entity_type')?.toString() || '';
+		const entity_id = form_data.get('entity_id')?.toString() || '';
 		const stage_str = form_data.get('stage')?.toString();
 		const size_str = form_data.get('size')?.toString().trim();
 

@@ -123,8 +123,8 @@
 	{/if}
 
 	{#if selected}
-		<input type="hidden" name="entityType" value={selected.type} />
-		<input type="hidden" name="entityId" value={selected.id} />
+		<input type="hidden" name="entity_type" value={selected.type} />
+		<input type="hidden" name="entity_id" value={selected.id} />
 	{/if}
 </div>
 
