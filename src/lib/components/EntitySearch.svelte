@@ -4,7 +4,7 @@
 
 	/** @type {import('$lib/types').EntitySearchResult[]} */
 	let results = $state([]);
-	let query = $state('');
+	let query = $state(selected?.name ?? '');
 	let is_open = $state(false);
 	let is_loading = $state(false);
 	let highlighted_index = $state(-1);
