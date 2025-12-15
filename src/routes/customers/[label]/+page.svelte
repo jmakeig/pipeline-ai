@@ -52,7 +52,7 @@
 				{/each}
 			</ul>
 		{/if}
-		<a href="/workloads/new?customer={data.customer.customer}" class="btn-secondary">Add Workload</a>
+		<a href="/workloads/new?customer={data.customer.label}" class="btn-secondary">Add Workload</a>
 
 		<h2>Events ({data.events.length})</h2>
 		{#if data.events.length === 0}
@@ -75,7 +75,7 @@
 				{/each}
 			</ul>
 		{/if}
-		<a href="/events/new?customer={data.customer.customer}" class="btn-secondary">Add Event</a>
+		<a href="/events/new?customer={data.customer.label}" class="btn-secondary">Add Event</a>
 	</section>
 </div>
 

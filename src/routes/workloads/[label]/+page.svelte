@@ -14,7 +14,7 @@
 	<div>
 		<h1>{data.workload.name}</h1>
 		<p class="subtitle">
-			<a href="/customers/{data.workload.customer}">{data.workload.customer_name}</a>
+			<a href="/customers/{data.workload.customer_label}">{data.workload.customer_name}</a>
 			{#if data.workload.current_stage}
 				<span class="stage-badge">{get_stage_info(data.workload.current_stage)?.label}</span>
 			{/if}
@@ -66,7 +66,7 @@
 				{/each}
 			</ul>
 		{/if}
-		<a href="/events/new?workload={data.workload.workload}" class="btn-secondary">Add Event</a>
+		<a href="/events/new?workload={data.workload.label}" class="btn-secondary">Add Event</a>
 	</section>
 </div>
 

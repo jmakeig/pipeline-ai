@@ -225,6 +225,7 @@ export async function get_all_workloads() {
 		SELECT
 			w.*,
 			c.name as customer_name,
+			c.label as customer_label,
 			latest_event.stage as current_stage,
 			latest_event.size as current_size
 		FROM workloads w
@@ -252,6 +253,7 @@ export async function get_workload_by_label(label) {
 		SELECT
 			w.*,
 			c.name as customer_name,
+			c.label as customer_label,
 			latest_event.stage as current_stage,
 			latest_event.size as current_size
 		FROM workloads w
@@ -291,6 +293,7 @@ export async function get_workloads_by_customer(customer_id) {
 		SELECT
 			w.*,
 			c.name as customer_name,
+			c.label as customer_label,
 			latest_event.stage as current_stage,
 			latest_event.size as current_size
 		FROM workloads w
@@ -410,6 +413,7 @@ export async function search_workloads(search_term, limit = 10) {
 		SELECT
 			w.*,
 			c.name as customer_name,
+			c.label as customer_label,
 			latest_event.stage as current_stage,
 			latest_event.size as current_size
 		FROM workloads w

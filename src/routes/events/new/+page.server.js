@@ -1,28 +1,27 @@
 import { redirect, fail } from '@sveltejs/kit';
-import { create_event, get_customer_by_id, get_workload_by_id } from '$lib/server/api.js';
+import { create_event, get_customer_by_id, get_customer_by_label, get_workload_by_id, get_workload_by_label } from '$lib/server/api.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ url }) {
-	const customer_id = url.searchParams.get('customer');
-	const workload_id = url.searchParams.get('workload');
+	const customer_label = url.searchParams.get('customer');
+	const workload_label = url.searchParams.get('workload');
 
 	/** @type {import('$lib/types').EntitySearchResult | null} */
 	let preselected_entity = null;
 
-	if (workload_id) {
-		const workload = await get_workload_by_id(workload_id);
+	if (workload_label) {
+		const workload = await get_workload_by_label(workload_label);
 		if (workload) {
-			const customer = await get_customer_by_id(workload.customer);
 			preselected_entity = {
 				type: 'workload',
 				id: workload.workload,
 				label: workload.label,
 				name: workload.name,
-				subtitle: customer?.name || ''
+				subtitle: workload.customer_name || ''
 			};
 		}
-	} else if (customer_id) {
-		const customer = await get_customer_by_id(customer_id);
+	} else if (customer_label) {
+		const customer = await get_customer_by_label(customer_label);
 		if (customer) {
 			preselected_entity = {
 				type: 'customer',

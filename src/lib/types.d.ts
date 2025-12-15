@@ -48,6 +48,7 @@ export interface Workload {
 // Workload with computed fields from events
 export interface WorkloadWithStatus extends Workload {
 	customer_name: string;
+	customer_label: string;
 	current_stage: Stage | null;
 	current_size: number | null;
 }
