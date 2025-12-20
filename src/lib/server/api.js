@@ -1,4 +1,4 @@
-import { query } from './db.js';
+import { query, transaction } from './db.js';
 import { Validation } from '$lib/validation.js';
 import { STAGES, REGIONS, SEGMENTS } from '$lib/constants.js';
 
@@ -304,6 +304,58 @@ export async function create_workload(data) {
 			[data.label.trim(), data.customer, data.name.trim()]
 		);
 		return { workload: result.rows[0] };
+	} catch (e) {
+		const error = /** @type {Error} */ (e);
+		if (error.message?.includes('unique constraint')) {
+			validation.add('A workload with this label already exists', 'label');
+			return { validation };
+		}
+		throw e;
+	}
+}
+
+/**
+ * @typedef {object} WorkloadWithEventData
+ * @property {string} label
+ * @property {string} name
+ * @property {string} customer
+ * @property {number | null} stage
+ * @property {number | null} size
+ */
+
+/**
+ * Create a new workload with an initial event in a single transaction
+ * @param {WorkloadWithEventData} data
+ * @returns {Promise<CreateWorkloadResult>}
+ */
+export async function create_workload_with_event(data) {
+	const validation = validate_workload(data);
+
+	if (!validation.is_valid()) {
+		return { validation };
+	}
+
+	try {
+		const workload = await transaction(async (client) => {
+			const workload_result = await client.query(
+				`INSERT INTO workloads (label, customer, name)
+				 VALUES ($1, $2, $3)
+				 RETURNING workload, label, customer, name, created_at, updated_at`,
+				[data.label.trim(), data.customer, data.name.trim()]
+			);
+
+			const workload = workload_result.rows[0];
+
+			await client.query(
+				`INSERT INTO events (customer, workload, outcome, stage, size)
+				 VALUES ($1, $2, $3, $4, $5)`,
+				[null, workload.workload, 'Workload created', data.stage, data.size]
+			);
+
+			return workload;
+		});
+
+		return { workload };
 	} catch (e) {
 		const error = /** @type {Error} */ (e);
 		if (error.message?.includes('unique constraint')) {

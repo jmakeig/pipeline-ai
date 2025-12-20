@@ -1,10 +1,16 @@
 <script>
+	import StageSelect from './StageSelect.svelte';
+
 	/** @type {{ workload?: import('$lib/types').Workload | null, customers: import('$lib/types').Customer[], action?: string }} */
 	let { workload = null, customers, action = '' } = $props();
 
 	let label = $state(workload?.label ?? '');
 	let name = $state(workload?.name ?? '');
 	let customer = $state(workload?.customer ?? '');
+	/** @type {import('$lib/types').Stage | null} */
+	let stage = $state(null);
+	/** @type {string} */
+	let size = $state('');
 </script>
 
 <form method="POST" {action}>
@@ -36,6 +42,29 @@
 		</select>
 	</div>
 
+	{#if !workload}
+		<div class="form-row">
+			<div class="form-group">
+				<label for="stage">Initial Stage (optional)</label>
+				<StageSelect bind:value={stage} />
+				<input type="hidden" name="stage" value={stage ?? ''} />
+			</div>
+
+			<div class="form-group">
+				<label for="size">Initial Size in USD (optional)</label>
+				<input
+					type="number"
+					id="size"
+					name="size"
+					bind:value={size}
+					min="0"
+					step="1"
+					placeholder="e.g., 100000"
+				/>
+			</div>
+		</div>
+	{/if}
+
 	<div class="form-actions">
 		<button type="submit">{workload ? 'Update' : 'Create'} Workload</button>
 		<a href="/workloads" class="btn-cancel">Cancel</a>
@@ -49,6 +78,12 @@
 
 	.form-group {
 		margin-bottom: 1rem;
+	}
+
+	.form-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
 	}
 
 	label {

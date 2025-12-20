@@ -1,5 +1,5 @@
 import { redirect, fail } from '@sveltejs/kit';
-import { create_workload, get_all_customers, get_customer_by_label } from '$lib/server/api.js';
+import { create_workload_with_event, get_all_customers, get_customer_by_label } from '$lib/server/api.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ url }) {
@@ -23,13 +23,18 @@ export const actions = {
 	default: async ({ request }) => {
 		const form_data = await request.formData();
 
+		const stage_str = form_data.get('stage')?.toString().trim();
+		const size_str = form_data.get('size')?.toString().trim();
+
 		const data = {
 			label: form_data.get('label')?.toString() || '',
 			name: form_data.get('name')?.toString() || '',
-			customer: form_data.get('customer')?.toString() || ''
+			customer: form_data.get('customer')?.toString() || '',
+			stage: stage_str ? parseInt(stage_str, 10) : null,
+			size: size_str ? parseFloat(size_str) : null
 		};
 
-		const result = await create_workload(data);
+		const result = await create_workload_with_event(data);
 
 		if (result.validation) {
 			return fail(400, {
