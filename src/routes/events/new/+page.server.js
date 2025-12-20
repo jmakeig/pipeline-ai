@@ -47,7 +47,6 @@ export const actions = {
 		const size_str = form_data.get('size')?.toString().trim();
 
 		const data = {
-			label: form_data.get('label')?.toString() || '',
 			customer: entity_type === 'customer' ? entity_id : null,
 			workload: entity_type === 'workload' ? entity_id : null,
 			outcome: form_data.get('outcome')?.toString() || '',

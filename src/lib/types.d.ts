@@ -63,7 +63,6 @@ export interface WorkloadInput {
 // Event entity
 export interface Event {
 	event: string;
-	label: string;
 	customer: string | null;
 	workload: string | null;
 	happened_at: Date;
@@ -81,7 +80,6 @@ export interface EventWithNames extends Event {
 
 // Event form data (for create)
 export interface EventInput {
-	label: string;
 	customer: string | null;
 	workload: string | null;
 	outcome: string;

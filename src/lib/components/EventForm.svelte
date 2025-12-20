@@ -5,7 +5,6 @@
 	/** @type {{ event?: import('$lib/types').Event | null, preselected_entity?: import('$lib/types').EntitySearchResult | null, action?: string }} */
 	let { event = null, preselected_entity = null, action = '' } = $props();
 
-	let label = $state(event?.label ?? '');
 	let outcome = $state(event?.outcome ?? '');
 	/** @type {import('$lib/types').Stage | null} */
 	let stage = $state(event?.stage ?? null);
@@ -16,19 +15,6 @@
 </script>
 
 <form method="POST" {action}>
-	<div class="form-group">
-		<label for="label">Label (URL-friendly identifier)</label>
-		<input
-			type="text"
-			id="label"
-			name="label"
-			bind:value={label}
-			required
-			pattern="[a-z0-9-]+"
-			title="Lowercase letters, numbers, and hyphens only"
-		/>
-	</div>
-
 	<div class="form-group">
 		<label for="entity">Customer or Workload</label>
 		<EntitySearch bind:selected={selected_entity} />
@@ -49,26 +35,28 @@
 		></textarea>
 	</div>
 
-	<div class="form-row">
-		<div class="form-group">
-			<label for="stage">Stage (optional)</label>
-			<StageSelect bind:value={stage} />
-			<input type="hidden" name="stage" value={stage ?? ''} />
-		</div>
+	{#if selected_entity?.type === 'workload'}
+		<div class="form-row">
+			<div class="form-group">
+				<label for="stage">Stage (optional)</label>
+				<StageSelect bind:value={stage} />
+				<input type="hidden" name="stage" value={stage ?? ''} />
+			</div>
 
-		<div class="form-group">
-			<label for="size">Size in USD (optional)</label>
-			<input
-				type="number"
-				id="size"
-				name="size"
-				bind:value={size}
-				min="0"
-				step="1"
-				placeholder="e.g., 100000"
-			/>
+			<div class="form-group">
+				<label for="size">Size in USD (optional)</label>
+				<input
+					type="number"
+					id="size"
+					name="size"
+					bind:value={size}
+					min="0"
+					step="1"
+					placeholder="e.g., 100000"
+				/>
+			</div>
 		</div>
-	</div>
+	{/if}
 
 	<div class="form-actions">
 		<button type="submit" disabled={!selected_entity}>{event ? 'Update' : 'Create'} Event</button>

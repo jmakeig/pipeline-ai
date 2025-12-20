@@ -106,7 +106,7 @@
 	{#if is_open && results.length > 0}
 		<ul class="results">
 			{#each results as result, i}
-				<li
+				<li role="row"
 					class:highlighted={i === highlighted_index}
 					onmousedown={() => select_result(result)}
 				>

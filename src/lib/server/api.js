@@ -222,22 +222,10 @@ export async function get_workload_count() {
  */
 export async function get_all_workloads() {
 	const result = await query(`
-		SELECT
-			w.*,
-			c.name as customer_name,
-			c.label as customer_label,
-			latest_event.stage as current_stage,
-			latest_event.size as current_size
-		FROM workloads w
-		JOIN customers c ON w.customer = c.customer
-		LEFT JOIN LATERAL (
-			SELECT stage, size
-			FROM events
-			WHERE workload = w.workload
-			ORDER BY happened_at DESC
-			LIMIT 1
-		) latest_event ON true
-		ORDER BY c.name ASC, w.name ASC
+		SELECT workload, label, customer, name, created_at, updated_at,
+		       customer_name, customer_label, current_stage, current_size
+		FROM pipeline
+		ORDER BY customer_name ASC, name ASC
 	`);
 	return result.rows;
 }
@@ -249,24 +237,10 @@ export async function get_all_workloads() {
  */
 export async function get_workload_by_label(label) {
 	const result = await query(
-		`
-		SELECT
-			w.*,
-			c.name as customer_name,
-			c.label as customer_label,
-			latest_event.stage as current_stage,
-			latest_event.size as current_size
-		FROM workloads w
-		JOIN customers c ON w.customer = c.customer
-		LEFT JOIN LATERAL (
-			SELECT stage, size
-			FROM events
-			WHERE workload = w.workload
-			ORDER BY happened_at DESC
-			LIMIT 1
-		) latest_event ON true
-		WHERE w.label = $1
-	`,
+		`SELECT workload, label, customer, name, created_at, updated_at,
+		        customer_name, customer_label, current_stage, current_size
+		 FROM pipeline
+		 WHERE label = $1`,
 		[label]
 	);
 	return result.rows[0] || null;
@@ -278,7 +252,12 @@ export async function get_workload_by_label(label) {
  * @returns {Promise<import('$lib/types').Workload | null>}
  */
 export async function get_workload_by_id(id) {
-	const result = await query('SELECT * FROM workloads WHERE workload = $1', [id]);
+	const result = await query(
+		`SELECT workload, label, customer, name, created_at, updated_at
+		 FROM workloads
+		 WHERE workload = $1`,
+		[id]
+	);
 	return result.rows[0] || null;
 }
 
@@ -289,25 +268,11 @@ export async function get_workload_by_id(id) {
  */
 export async function get_workloads_by_customer(customer_id) {
 	const result = await query(
-		`
-		SELECT
-			w.*,
-			c.name as customer_name,
-			c.label as customer_label,
-			latest_event.stage as current_stage,
-			latest_event.size as current_size
-		FROM workloads w
-		JOIN customers c ON w.customer = c.customer
-		LEFT JOIN LATERAL (
-			SELECT stage, size
-			FROM events
-			WHERE workload = w.workload
-			ORDER BY happened_at DESC
-			LIMIT 1
-		) latest_event ON true
-		WHERE w.customer = $1
-		ORDER BY w.name ASC
-	`,
+		`SELECT workload, label, customer, name, created_at, updated_at,
+		        customer_name, customer_label, current_stage, current_size
+		 FROM pipeline
+		 WHERE customer = $1
+		 ORDER BY name ASC`,
 		[customer_id]
 	);
 	return result.rows;
@@ -335,7 +300,7 @@ export async function create_workload(data) {
 		const result = await query(
 			`INSERT INTO workloads (label, customer, name)
 			 VALUES ($1, $2, $3)
-			 RETURNING *`,
+			 RETURNING workload, label, customer, name, created_at, updated_at`,
 			[data.label.trim(), data.customer, data.name.trim()]
 		);
 		return { workload: result.rows[0] };
@@ -374,7 +339,7 @@ export async function update_workload(current_label, data) {
 			`UPDATE workloads
 			 SET label = $1, customer = $2, name = $3, updated_at = NOW()
 			 WHERE label = $4
-			 RETURNING *`,
+			 RETURNING workload, label, customer, name, created_at, updated_at`,
 			[data.label.trim(), data.customer, data.name.trim(), current_label]
 		);
 		if (!result.rows[0]) {
@@ -409,26 +374,12 @@ export async function delete_workload(label) {
  */
 export async function search_workloads(search_term, limit = 10) {
 	const result = await query(
-		`
-		SELECT
-			w.*,
-			c.name as customer_name,
-			c.label as customer_label,
-			latest_event.stage as current_stage,
-			latest_event.size as current_size
-		FROM workloads w
-		JOIN customers c ON w.customer = c.customer
-		LEFT JOIN LATERAL (
-			SELECT stage, size
-			FROM events
-			WHERE workload = w.workload
-			ORDER BY happened_at DESC
-			LIMIT 1
-		) latest_event ON true
-		WHERE w.name ILIKE $1 OR w.label ILIKE $1
-		ORDER BY w.name ASC
-		LIMIT $2
-	`,
+		`SELECT workload, label, customer, name, created_at, updated_at,
+		        customer_name, customer_label, current_stage, current_size
+		 FROM pipeline
+		 WHERE name ILIKE $1 OR label ILIKE $1
+		 ORDER BY name ASC
+		 LIMIT $2`,
 		[`%${search_term}%`, limit]
 	);
 	return result.rows;
@@ -440,7 +391,6 @@ export async function search_workloads(search_term, limit = 10) {
 
 /**
  * @typedef {object} EventFormData
- * @property {string} label
  * @property {string | null} customer
  * @property {string | null} workload
  * @property {string} outcome
@@ -456,7 +406,6 @@ export async function search_workloads(search_term, limit = 10) {
 export function validate_event(data) {
 	const validation = new Validation();
 
-	if (!data.label?.trim()) validation.add('Label is required', 'label');
 	if (!data.customer && !data.workload) {
 		validation.add('Either customer or workload is required', 'entity');
 	}
@@ -496,11 +445,11 @@ export async function get_all_events() {
 }
 
 /**
- * Get an event by label
- * @param {string} label
+ * Get an event by UUID
+ * @param {string} id
  * @returns {Promise<import('$lib/types').EventWithNames | null>}
  */
-export async function get_event_by_label(label) {
+export async function get_event_by_id(id) {
 	const result = await query(
 		`
 		SELECT
@@ -510,9 +459,9 @@ export async function get_event_by_label(label) {
 		FROM events e
 		LEFT JOIN customers c ON e.customer = c.customer
 		LEFT JOIN workloads w ON e.workload = w.workload
-		WHERE e.label = $1
+		WHERE e.event = $1
 	`,
-		[label]
+		[id]
 	);
 	return result.rows[0] || null;
 }
@@ -581,22 +530,13 @@ export async function create_event(data) {
 		return { validation };
 	}
 
-	try {
-		const result = await query(
-			`INSERT INTO events (label, customer, workload, outcome, stage, size)
-			 VALUES ($1, $2, $3, $4, $5, $6)
-			 RETURNING *`,
-			[data.label.trim(), data.customer, data.workload, data.outcome.trim(), data.stage, data.size]
-		);
-		return { event: result.rows[0] };
-	} catch (e) {
-		const error = /** @type {Error} */ (e);
-		if (error.message?.includes('unique constraint')) {
-			validation.add('An event with this label already exists', 'label');
-			return { validation };
-		}
-		throw e;
-	}
+	const result = await query(
+		`INSERT INTO events (customer, workload, outcome, stage, size)
+		 VALUES ($1, $2, $3, $4, $5)
+		 RETURNING *`,
+		[data.customer, data.workload, data.outcome.trim(), data.stage, data.size]
+	);
+	return { event: result.rows[0] };
 }
 
 /**
@@ -608,46 +548,37 @@ export async function create_event(data) {
 
 /**
  * Update an event with validation
- * @param {string} current_label
+ * @param {string} event_id
  * @param {EventFormData} data
  * @returns {Promise<UpdateEventResult>}
  */
-export async function update_event(current_label, data) {
+export async function update_event(event_id, data) {
 	const validation = validate_event(data);
 
 	if (!validation.is_valid()) {
 		return { validation };
 	}
 
-	try {
-		const result = await query(
-			`UPDATE events
-			 SET label = $1, customer = $2, workload = $3, outcome = $4, stage = $5, size = $6
-			 WHERE label = $7
-			 RETURNING *`,
-			[data.label.trim(), data.customer, data.workload, data.outcome.trim(), data.stage, data.size, current_label]
-		);
-		if (!result.rows[0]) {
-			return { not_found: true };
-		}
-		return { event: result.rows[0] };
-	} catch (e) {
-		const error = /** @type {Error} */ (e);
-		if (error.message?.includes('unique constraint')) {
-			validation.add('An event with this label already exists', 'label');
-			return { validation };
-		}
-		throw e;
+	const result = await query(
+		`UPDATE events
+		 SET customer = $1, workload = $2, outcome = $3, stage = $4, size = $5
+		 WHERE event = $6
+		 RETURNING *`,
+		[data.customer, data.workload, data.outcome.trim(), data.stage, data.size, event_id]
+	);
+	if (!result.rows[0]) {
+		return { not_found: true };
 	}
+	return { event: result.rows[0] };
 }
 
 /**
  * Delete an event
- * @param {string} label
+ * @param {string} event_id
  * @returns {Promise<boolean>}
  */
-export async function delete_event(label) {
-	const result = await query('DELETE FROM events WHERE label = $1', [label]);
+export async function delete_event(event_id) {
+	const result = await query('DELETE FROM events WHERE event = $1', [event_id]);
 	return result.rowCount > 0;
 }
 
