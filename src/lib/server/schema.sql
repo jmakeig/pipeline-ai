@@ -10,9 +10,9 @@ CREATE TABLE customers (
     customer UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     label TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
-    region TEXT NOT NULL CHECK (region IN ('NORTHAM', 'EMEA', 'JAPAC', 'LATAM')),
-    segment TEXT NOT NULL CHECK (segment IN ('Select', 'Enterprise', 'SMB')),
-    industry TEXT NOT NULL,
+    region TEXT CHECK (region IS NULL OR region IN ('NORTHAM', 'EMEA', 'JAPAC', 'LATAM')),
+    segment TEXT CHECK (segment IS NULL OR segment IN ('Select', 'Enterprise', 'SMB')),
+    industry TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

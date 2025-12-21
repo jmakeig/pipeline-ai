@@ -25,15 +25,12 @@ export function validate_customer(data) {
 
 	if (!data.label?.trim()) validation.add('Label is required', 'label');
 	if (!data.name?.trim()) validation.add('Name is required', 'name');
-	if (!data.region) validation.add('Region is required', 'region');
-	else if (!REGIONS.includes(/** @type {any} */ (data.region))) {
+	if (data.region && !REGIONS.includes(/** @type {any} */ (data.region))) {
 		validation.add('Invalid region', 'region');
 	}
-	if (!data.segment) validation.add('Segment is required', 'segment');
-	else if (!SEGMENTS.includes(/** @type {any} */ (data.segment))) {
+	if (data.segment && !SEGMENTS.includes(/** @type {any} */ (data.segment))) {
 		validation.add('Invalid segment', 'segment');
 	}
-	if (!data.industry?.trim()) validation.add('Industry is required', 'industry');
 
 	return validation;
 }
@@ -99,7 +96,7 @@ export async function create_customer(data) {
 			`INSERT INTO customers (label, name, region, segment, industry)
 			 VALUES ($1, $2, $3, $4, $5)
 			 RETURNING *`,
-			[data.label.trim(), data.name.trim(), data.region, data.segment, data.industry.trim()]
+			[data.label.trim(), data.name.trim(), data.region || null, data.segment || null, data.industry?.trim() || null]
 		);
 		return { customer: result.rows[0] };
 	} catch (e) {
@@ -138,7 +135,7 @@ export async function update_customer(current_label, data) {
 			 SET label = $1, name = $2, region = $3, segment = $4, industry = $5, updated_at = NOW()
 			 WHERE label = $6
 			 RETURNING *`,
-			[data.label.trim(), data.name.trim(), data.region, data.segment, data.industry.trim(), current_label]
+			[data.label.trim(), data.name.trim(), data.region || null, data.segment || null, data.industry?.trim() || null, current_label]
 		);
 		if (!result.rows[0]) {
 			return { not_found: true };
@@ -649,7 +646,7 @@ export async function search_entities(search_term, limit = 10) {
 				customer as id,
 				label,
 				name,
-				region || ' / ' || segment as subtitle
+				COALESCE(region, '') || CASE WHEN region IS NOT NULL AND segment IS NOT NULL THEN ' / ' ELSE '' END || COALESCE(segment, '') as subtitle
 			FROM customers
 			WHERE name ILIKE $1 OR label ILIKE $1
 			ORDER BY name ASC

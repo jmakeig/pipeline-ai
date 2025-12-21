@@ -19,9 +19,9 @@ export interface Customer {
 	customer: string;
 	label: string;
 	name: string;
-	region: Region;
-	segment: Segment;
-	industry: string;
+	region: Region | null;
+	segment: Segment | null;
+	industry: string | null;
 	created_at: Date;
 	updated_at: Date;
 }
@@ -30,9 +30,9 @@ export interface Customer {
 export interface CustomerInput {
 	label: string;
 	name: string;
-	region: Region;
-	segment: Segment;
-	industry: string;
+	region: Region | null;
+	segment: Segment | null;
+	industry: string | null;
 }
 
 // Workload entity

@@ -1,5 +1,5 @@
 <script>
-	import { REGIONS, SEGMENTS } from '$lib/constants.js';
+	import { REGIONS, SEGMENTS, slug } from '$lib/constants.js';
 
 	/** @type {{ customer?: import('$lib/types').Customer | null, action?: string }} */
 	let { customer = null, action = '' } = $props();
@@ -9,6 +9,13 @@
 	let region = $state(customer?.region ?? '');
 	let segment = $state(customer?.segment ?? '');
 	let industry = $state(customer?.industry ?? '');
+
+	// Auto-generate label from name for new customers
+	$effect(() => {
+		if (!customer) {
+			label = slug(name);
+		}
+	});
 </script>
 
 <form method="POST" {action}>
@@ -32,7 +39,7 @@
 
 	<div class="form-group">
 		<label for="region">Region</label>
-		<select id="region" name="region" bind:value={region} required>
+		<select id="region" name="region" bind:value={region}>
 			<option value="">-- Select region --</option>
 			{#each REGIONS as r}
 				<option value={r}>{r}</option>
@@ -42,7 +49,7 @@
 
 	<div class="form-group">
 		<label for="segment">Segment</label>
-		<select id="segment" name="segment" bind:value={segment} required>
+		<select id="segment" name="segment" bind:value={segment}>
 			<option value="">-- Select segment --</option>
 			{#each SEGMENTS as s}
 				<option value={s}>{s}</option>
@@ -52,7 +59,7 @@
 
 	<div class="form-group">
 		<label for="industry">Industry</label>
-		<input type="text" id="industry" name="industry" bind:value={industry} required />
+		<input type="text" id="industry" name="industry" bind:value={industry} />
 	</div>
 
 	<div class="form-actions">

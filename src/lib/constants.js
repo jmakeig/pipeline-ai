@@ -71,3 +71,27 @@ export function format_date_time(date) {
 		minute: '2-digit'
 	});
 }
+
+/**
+ * Turns a string into a URL-ready slug
+ *
+ * @param {string} name
+ * @returns {string}
+ */
+export function slug(name) {
+	const maxLength = 80;
+	let len = 0,
+		index = 0,
+		slug = '';
+	// https://stackoverflow.com/a/66721429
+	const tokens = name.split(/[^\p{L}\p{N}]+/gu);
+	while (len < maxLength && index < tokens.length) {
+		len += tokens[index].length;
+		if (tokens[index].length > 0) {
+			slug += (index > 0 ? '-' : '') + tokens[index++].toLowerCase();
+		} else {
+			index++;
+		}
+	}
+	return slug;
+}

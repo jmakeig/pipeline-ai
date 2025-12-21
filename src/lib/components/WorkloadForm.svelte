@@ -1,4 +1,5 @@
 <script>
+	import { slug } from '$lib/constants.js';
 	import StageSelect from './StageSelect.svelte';
 
 	/** @type {{ workload?: import('$lib/types').Workload | null, customers: import('$lib/types').Customer[], action?: string }} */
@@ -11,6 +12,13 @@
 	let stage = $state(null);
 	/** @type {string} */
 	let size = $state('');
+
+	// Auto-generate label from name for new workloads
+	$effect(() => {
+		if (!workload) {
+			label = slug(name);
+		}
+	});
 </script>
 
 <form method="POST" {action}>
