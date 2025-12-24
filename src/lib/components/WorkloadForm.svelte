@@ -2,12 +2,12 @@
 	import { slug } from '$lib/constants.js';
 	import StageSelect from './StageSelect.svelte';
 
-	/** @type {{ workload?: import('$lib/types').Workload | null, customers: import('$lib/types').Customer[], action?: string }} */
-	let { workload = null, customers, action = '' } = $props();
+	/** @type {{ workload?: import('$lib/types').Workload | null, customers: import('$lib/types').Customer[], action?: string, preselected_customer?: string }} */
+	let { workload = null, customers, action = '', preselected_customer = '' } = $props();
 
 	let label = $state(workload?.label ?? '');
 	let name = $state(workload?.name ?? '');
-	let customer = $state(workload?.customer ?? '');
+	let customer = $state(workload?.customer ?? preselected_customer);
 	/** @type {import('$lib/types').Stage | null} */
 	let stage = $state(null);
 	/** @type {string} */
