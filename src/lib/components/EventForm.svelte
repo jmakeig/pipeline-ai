@@ -1,12 +1,12 @@
 <script>
-	import { STAGES } from '$lib/constants.js';
-	import EntitySearch from './EntitySearch.svelte';
+	import { STAGES } from "$lib/constants.js";
+	import EntitySearch from "./EntitySearch.svelte";
 
 	/** @type {{ event?: import('$lib/types').Event | null, preselected_entity?: import('$lib/types').EntitySearchResult | null, action?: string }} */
-	let { event = null, preselected_entity = null, action = '' } = $props();
+	let { event = null, preselected_entity = null, action = "" } = $props();
 
 	/** @type {import('$lib/types').EntitySearchResult | null} */
-	let selected_entity = $state(preselected_entity);
+	let selected_entity = $derived(preselected_entity);
 </script>
 
 <form method="POST" {action}>
@@ -14,7 +14,9 @@
 		<label for="entity">Customer or Workload</label>
 		<EntitySearch bind:selected={selected_entity} />
 		{#if !selected_entity}
-			<p class="hint">Start typing to search for a customer or workload</p>
+			<p class="hint">
+				Start typing to search for a customer or workload
+			</p>
 		{/if}
 	</div>
 
@@ -26,17 +28,22 @@
 			required
 			rows="4"
 			placeholder="Describe decisions made and blockers to next stage..."
-		>{event?.outcome ?? ''}</textarea>
+			>{event?.outcome ?? ""}</textarea
+		>
 	</div>
 
-	{#if selected_entity?.type === 'workload'}
+	{#if selected_entity?.type === "workload"}
 		<div class="form-row">
 			<div class="form-group">
 				<label for="stage">Stage (optional)</label>
 				<select id="stage" name="stage">
 					<option value="">-- Select stage --</option>
 					{#each STAGES as stage}
-						<option value={stage.value} selected={stage.value === event?.stage}>{stage.label}</option>
+						<option
+							value={stage.value}
+							selected={stage.value === event?.stage}
+							>{stage.label}</option
+						>
 					{/each}
 				</select>
 			</div>
@@ -47,7 +54,7 @@
 					type="number"
 					id="size"
 					name="size"
-					value={event?.size ?? ''}
+					value={event?.size ?? ""}
 					min="0"
 					step="1"
 					placeholder="e.g., 100000"
@@ -57,7 +64,9 @@
 	{/if}
 
 	<div class="form-actions">
-		<button type="submit" disabled={!selected_entity}>{event ? 'Update' : 'Create'} Event</button>
+		<button type="submit" disabled={!selected_entity}
+			>{event ? "Update" : "Create"} Event</button
+		>
 		<a href="/events" class="btn-cancel">Cancel</a>
 	</div>
 </form>
