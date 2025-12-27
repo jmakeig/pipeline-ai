@@ -1,8 +1,12 @@
 <script>
 	import '../app.css';
+	import QuickEventModal from '$lib/components/QuickEventModal.svelte';
 
 	/** @type {{ children: import('svelte').Snippet }} */
 	let { children } = $props();
+
+	/** @type {QuickEventModal} */
+	let quick_event_modal;
 </script>
 
 <div class="app">
@@ -11,14 +15,18 @@
 		<ul>
 			<li><a href="/customers">Customers</a></li>
 			<li><a href="/workloads">Workloads</a></li>
-			<li><a href="/events/new">New Event</a></li>
 		</ul>
+		<button class="quick-event-btn" onclick={() => quick_event_modal.open()}>
+			+ Quick Event
+		</button>
 	</nav>
 
 	<main>
 		{@render children()}
 	</main>
 </div>
+
+<QuickEventModal bind:this={quick_event_modal} />
 
 <style>
 	.app {
@@ -52,6 +60,7 @@
 		list-style: none;
 		margin: 0;
 		padding: 0;
+		flex: 1;
 	}
 
 	li a {
@@ -61,6 +70,21 @@
 
 	li a:hover {
 		color: white;
+	}
+
+	.quick-event-btn {
+		padding: 0.4rem 0.75rem;
+		background-color: #0066cc;
+		color: white;
+		border: none;
+		border-radius: 4px;
+		font-size: 0.9rem;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+
+	.quick-event-btn:hover {
+		background-color: #0055aa;
 	}
 
 	main {

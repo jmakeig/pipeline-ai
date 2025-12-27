@@ -1,6 +1,6 @@
 <script>
-	/** @type {{ selected: import('$lib/types').EntitySearchResult | null, placeholder?: string }} */
-	let { selected = $bindable(null), placeholder = 'Search customers or workloads...' } = $props();
+	/** @type {{ selected: import('$lib/types').EntitySearchResult | null, placeholder?: string, type_filter?: 'customer' | 'workload' | null, onnosearchresults?: (query: string) => void }} */
+	let { selected = $bindable(null), placeholder = 'Search customers or workloads...', type_filter = null, onnosearchresults } = $props();
 
 	/** @type {import('$lib/types').EntitySearchResult[]} */
 	let results = $state([]);
@@ -20,9 +20,16 @@
 
 		is_loading = true;
 		try {
-			const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+			let url = `/api/search?q=${encodeURIComponent(query)}`;
+			if (type_filter) {
+				url += `&type=${type_filter}`;
+			}
+			const response = await fetch(url);
 			if (response.ok) {
 				results = await response.json();
+				if (results.length === 0 && onnosearchresults) {
+					onnosearchresults(query);
+				}
 			}
 		} catch (e) {
 			console.error('Search error:', e);

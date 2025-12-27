@@ -20,10 +20,6 @@
 		<h2>Workloads</h2>
 		<p>{data.workload_count} total</p>
 	</a>
-	<a href="/events/new" class="card">
-		<h2>New Event</h2>
-		<p>Log an interaction</p>
-	</a>
 </div>
 
 <style>

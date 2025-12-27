@@ -370,6 +370,70 @@ export async function create_workload_with_event(data) {
 }
 
 /**
+ * @typedef {object} QuickWorkloadEventData
+ * @property {string} name - Workload name
+ * @property {string} customer - Customer UUID
+ * @property {string} outcome - Event outcome
+ * @property {number | null} stage
+ * @property {number | null} size
+ */
+
+/**
+ * @typedef {object} QuickWorkloadEventResult
+ * @property {import('$lib/types').Workload} [workload]
+ * @property {import('$lib/types').Event} [event]
+ * @property {Validation<any>} [validation]
+ */
+
+/**
+ * Create a new workload and event in a single transaction (for quick event modal)
+ * @param {QuickWorkloadEventData} data
+ * @returns {Promise<QuickWorkloadEventResult>}
+ */
+export async function create_workload_and_event(data) {
+	const { validation, label } = validate_workload({ label: '', name: data.name, customer: data.customer });
+
+	if (!data.outcome?.trim()) {
+		validation.add('Outcome is required', 'outcome');
+	}
+
+	if (!validation.is_valid()) {
+		return { validation };
+	}
+
+	try {
+		const result = await transaction(async (client) => {
+			const workload_result = await client.query(
+				`INSERT INTO workloads (label, customer, name)
+				 VALUES ($1, $2, $3)
+				 RETURNING workload, label, customer, name, created_at, updated_at`,
+				[label, data.customer, data.name.trim()]
+			);
+
+			const workload = workload_result.rows[0];
+
+			const event_result = await client.query(
+				`INSERT INTO events (customer, workload, outcome, stage, size)
+				 VALUES ($1, $2, $3, $4, $5)
+				 RETURNING *`,
+				[null, workload.workload, data.outcome.trim(), data.stage, data.size]
+			);
+
+			return { workload, event: event_result.rows[0] };
+		});
+
+		return result;
+	} catch (e) {
+		const error = /** @type {Error} */ (e);
+		if (error.message?.includes('unique constraint')) {
+			validation.add('A workload with this label already exists', 'label');
+			return { validation };
+		}
+		throw e;
+	}
+}
+
+/**
  * @typedef {object} UpdateWorkloadResult
  * @property {import('$lib/types').Workload} [workload]
  * @property {Validation<import('$lib/types').WorkloadInput>} [validation]
@@ -641,9 +705,45 @@ export async function delete_event(event_id) {
  * Search both customers and workloads for EntitySearch component
  * @param {string} search_term
  * @param {number} [limit=10]
+ * @param {string | null} [type_filter=null] - Filter by 'customer' or 'workload'
  * @returns {Promise<import('$lib/types').EntitySearchResult[]>}
  */
-export async function search_entities(search_term, limit = 10) {
+export async function search_entities(search_term, limit = 10, type_filter = null) {
+	if (type_filter === 'customer') {
+		const result = await query(
+			`SELECT
+				'customer' as type,
+				customer as id,
+				label,
+				name,
+				COALESCE(region, '') || CASE WHEN region IS NOT NULL AND segment IS NOT NULL THEN ' / ' ELSE '' END || COALESCE(segment, '') as subtitle
+			FROM customers
+			WHERE name ILIKE $1 OR label ILIKE $1
+			ORDER BY name ASC
+			LIMIT $2`,
+			[`%${search_term}%`, limit]
+		);
+		return result.rows;
+	}
+
+	if (type_filter === 'workload') {
+		const result = await query(
+			`SELECT
+				'workload' as type,
+				w.workload as id,
+				w.label,
+				w.name,
+				c.name as subtitle
+			FROM workloads w
+			JOIN customers c ON w.customer = c.customer
+			WHERE w.name ILIKE $1 OR w.label ILIKE $1
+			ORDER BY w.name ASC
+			LIMIT $2`,
+			[`%${search_term}%`, limit]
+		);
+		return result.rows;
+	}
+
 	const result = await query(
 		`
 		(
