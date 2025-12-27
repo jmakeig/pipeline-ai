@@ -1,15 +1,10 @@
 <script>
+	import { STAGES } from '$lib/constants.js';
 	import EntitySearch from './EntitySearch.svelte';
-	import StageSelect from './StageSelect.svelte';
 
 	/** @type {{ event?: import('$lib/types').Event | null, preselected_entity?: import('$lib/types').EntitySearchResult | null, action?: string }} */
 	let { event = null, preselected_entity = null, action = '' } = $props();
 
-	let outcome = $state(event?.outcome ?? '');
-	/** @type {import('$lib/types').Stage | null} */
-	let stage = $state(event?.stage ?? null);
-	/** @type {string} */
-	let size = $state(event?.size?.toString() ?? '');
 	/** @type {import('$lib/types').EntitySearchResult | null} */
 	let selected_entity = $state(preselected_entity);
 </script>
@@ -28,19 +23,22 @@
 		<textarea
 			id="outcome"
 			name="outcome"
-			bind:value={outcome}
 			required
 			rows="4"
 			placeholder="Describe decisions made and blockers to next stage..."
-		></textarea>
+		>{event?.outcome ?? ''}</textarea>
 	</div>
 
 	{#if selected_entity?.type === 'workload'}
 		<div class="form-row">
 			<div class="form-group">
 				<label for="stage">Stage (optional)</label>
-				<StageSelect bind:value={stage} />
-				<input type="hidden" name="stage" value={stage ?? ''} />
+				<select id="stage" name="stage">
+					<option value="">-- Select stage --</option>
+					{#each STAGES as stage}
+						<option value={stage.value} selected={stage.value === event?.stage}>{stage.label}</option>
+					{/each}
+				</select>
 			</div>
 
 			<div class="form-group">
@@ -49,7 +47,7 @@
 					type="number"
 					id="size"
 					name="size"
-					bind:value={size}
+					value={event?.size ?? ''}
 					min="0"
 					step="1"
 					placeholder="e.g., 100000"
@@ -86,7 +84,8 @@
 	}
 
 	input,
-	textarea {
+	textarea,
+	select {
 		width: 100%;
 		padding: 0.5rem;
 		border: 1px solid #ccc;
@@ -96,7 +95,8 @@
 	}
 
 	input:focus,
-	textarea:focus {
+	textarea:focus,
+	select:focus {
 		outline: none;
 		border-color: #0066cc;
 		box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);

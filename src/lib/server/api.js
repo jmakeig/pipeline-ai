@@ -1,6 +1,6 @@
 import { query, transaction } from './db.js';
 import { Validation } from '$lib/validation.js';
-import { STAGES, REGIONS, SEGMENTS } from '$lib/constants.js';
+import { STAGES, REGIONS, SEGMENTS, slug } from '$lib/constants.js';
 
 // =============================================================================
 // Customers
@@ -16,14 +16,13 @@ import { STAGES, REGIONS, SEGMENTS } from '$lib/constants.js';
  */
 
 /**
- * Validate customer form data
+ * Validate customer form data and auto-generate label from name if empty
  * @param {CustomerFormData} data
- * @returns {Validation<import('$lib/types').CustomerInput>}
+ * @returns {{ validation: Validation<import('$lib/types').CustomerInput>, label: string }}
  */
 export function validate_customer(data) {
 	const validation = new Validation();
 
-	if (!data.label?.trim()) validation.add('Label is required', 'label');
 	if (!data.name?.trim()) validation.add('Name is required', 'name');
 	if (data.region && !REGIONS.includes(/** @type {any} */ (data.region))) {
 		validation.add('Invalid region', 'region');
@@ -32,7 +31,11 @@ export function validate_customer(data) {
 		validation.add('Invalid segment', 'segment');
 	}
 
-	return validation;
+	// Auto-generate label from name if not provided
+	const label = data.label?.trim() || slug(data.name?.trim() || '');
+	if (!label) validation.add('Label is required', 'label');
+
+	return { validation, label };
 }
 
 /**
@@ -85,7 +88,7 @@ export async function get_customer_by_id(id) {
  * @returns {Promise<CreateCustomerResult>}
  */
 export async function create_customer(data) {
-	const validation = validate_customer(data);
+	const { validation, label } = validate_customer(data);
 
 	if (!validation.is_valid()) {
 		return { validation };
@@ -96,7 +99,7 @@ export async function create_customer(data) {
 			`INSERT INTO customers (label, name, region, segment, industry)
 			 VALUES ($1, $2, $3, $4, $5)
 			 RETURNING *`,
-			[data.label.trim(), data.name.trim(), data.region || null, data.segment || null, data.industry?.trim() || null]
+			[label, data.name.trim(), data.region || null, data.segment || null, data.industry?.trim() || null]
 		);
 		return { customer: result.rows[0] };
 	} catch (e) {
@@ -123,7 +126,7 @@ export async function create_customer(data) {
  * @returns {Promise<UpdateCustomerResult>}
  */
 export async function update_customer(current_label, data) {
-	const validation = validate_customer(data);
+	const { validation, label } = validate_customer(data);
 
 	if (!validation.is_valid()) {
 		return { validation };
@@ -135,7 +138,7 @@ export async function update_customer(current_label, data) {
 			 SET label = $1, name = $2, region = $3, segment = $4, industry = $5, updated_at = NOW()
 			 WHERE label = $6
 			 RETURNING *`,
-			[data.label.trim(), data.name.trim(), data.region || null, data.segment || null, data.industry?.trim() || null, current_label]
+			[label, data.name.trim(), data.region || null, data.segment || null, data.industry?.trim() || null, current_label]
 		);
 		if (!result.rows[0]) {
 			return { not_found: true };
@@ -190,18 +193,21 @@ export async function search_customers(search_term, limit = 10) {
  */
 
 /**
- * Validate workload form data
+ * Validate workload form data and auto-generate label from name if empty
  * @param {WorkloadFormData} data
- * @returns {Validation<import('$lib/types').WorkloadInput>}
+ * @returns {{ validation: Validation<import('$lib/types').WorkloadInput>, label: string }}
  */
 export function validate_workload(data) {
 	const validation = new Validation();
 
-	if (!data.label?.trim()) validation.add('Label is required', 'label');
 	if (!data.name?.trim()) validation.add('Name is required', 'name');
 	if (!data.customer) validation.add('Customer is required', 'customer');
 
-	return validation;
+	// Auto-generate label from name if not provided
+	const label = data.label?.trim() || slug(data.name?.trim() || '');
+	if (!label) validation.add('Label is required', 'label');
+
+	return { validation, label };
 }
 
 /**
@@ -287,7 +293,7 @@ export async function get_workloads_by_customer(customer_id) {
  * @returns {Promise<CreateWorkloadResult>}
  */
 export async function create_workload(data) {
-	const validation = validate_workload(data);
+	const { validation, label } = validate_workload(data);
 
 	if (!validation.is_valid()) {
 		return { validation };
@@ -298,7 +304,7 @@ export async function create_workload(data) {
 			`INSERT INTO workloads (label, customer, name)
 			 VALUES ($1, $2, $3)
 			 RETURNING workload, label, customer, name, created_at, updated_at`,
-			[data.label.trim(), data.customer, data.name.trim()]
+			[label, data.customer, data.name.trim()]
 		);
 		return { workload: result.rows[0] };
 	} catch (e) {
@@ -326,7 +332,7 @@ export async function create_workload(data) {
  * @returns {Promise<CreateWorkloadResult>}
  */
 export async function create_workload_with_event(data) {
-	const validation = validate_workload(data);
+	const { validation, label } = validate_workload(data);
 
 	if (!validation.is_valid()) {
 		return { validation };
@@ -338,7 +344,7 @@ export async function create_workload_with_event(data) {
 				`INSERT INTO workloads (label, customer, name)
 				 VALUES ($1, $2, $3)
 				 RETURNING workload, label, customer, name, created_at, updated_at`,
-				[data.label.trim(), data.customer, data.name.trim()]
+				[label, data.customer, data.name.trim()]
 			);
 
 			const workload = workload_result.rows[0];
@@ -377,7 +383,7 @@ export async function create_workload_with_event(data) {
  * @returns {Promise<UpdateWorkloadResult>}
  */
 export async function update_workload(current_label, data) {
-	const validation = validate_workload(data);
+	const { validation, label } = validate_workload(data);
 
 	if (!validation.is_valid()) {
 		return { validation };
@@ -389,7 +395,7 @@ export async function update_workload(current_label, data) {
 			 SET label = $1, customer = $2, name = $3, updated_at = NOW()
 			 WHERE label = $4
 			 RETURNING workload, label, customer, name, created_at, updated_at`,
-			[data.label.trim(), data.customer, data.name.trim(), current_label]
+			[label, data.customer, data.name.trim(), current_label]
 		);
 		if (!result.rows[0]) {
 			return { not_found: true };

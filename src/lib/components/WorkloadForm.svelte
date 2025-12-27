@@ -1,24 +1,8 @@
 <script>
-	import { slug } from '$lib/constants.js';
-	import StageSelect from './StageSelect.svelte';
+	import { STAGES } from '$lib/constants.js';
 
 	/** @type {{ workload?: import('$lib/types').Workload | null, customers: import('$lib/types').Customer[], action?: string, preselected_customer?: string }} */
 	let { workload = null, customers, action = '', preselected_customer = '' } = $props();
-
-	let label = $state(workload?.label ?? '');
-	let name = $state(workload?.name ?? '');
-	let customer = $state(workload?.customer ?? preselected_customer);
-	/** @type {import('$lib/types').Stage | null} */
-	let stage = $state(null);
-	/** @type {string} */
-	let size = $state('');
-
-	// Auto-generate label from name for new workloads
-	$effect(() => {
-		if (!workload) {
-			label = slug(name);
-		}
-	});
 </script>
 
 <form method="POST" {action}>
@@ -28,24 +12,24 @@
 			type="text"
 			id="label"
 			name="label"
-			bind:value={label}
-			required
+			value={workload?.label ?? ''}
 			pattern="[a-z0-9-]+"
 			title="Lowercase letters, numbers, and hyphens only"
+			placeholder={workload ? '' : 'Leave blank to auto-generate from name'}
 		/>
 	</div>
 
 	<div class="form-group">
 		<label for="name">Name</label>
-		<input type="text" id="name" name="name" bind:value={name} required />
+		<input type="text" id="name" name="name" value={workload?.name ?? ''} required />
 	</div>
 
 	<div class="form-group">
 		<label for="customer">Customer</label>
-		<select id="customer" name="customer" bind:value={customer} required>
+		<select id="customer" name="customer" required>
 			<option value="">-- Select customer --</option>
 			{#each customers as c}
-				<option value={c.customer}>{c.name}</option>
+				<option value={c.customer} selected={c.customer === (workload?.customer ?? preselected_customer)}>{c.name}</option>
 			{/each}
 		</select>
 	</div>
@@ -54,8 +38,12 @@
 		<div class="form-row">
 			<div class="form-group">
 				<label for="stage">Initial Stage (optional)</label>
-				<StageSelect bind:value={stage} />
-				<input type="hidden" name="stage" value={stage ?? ''} />
+				<select id="stage" name="stage">
+					<option value="">-- Select stage --</option>
+					{#each STAGES as stage}
+						<option value={stage.value}>{stage.label}</option>
+					{/each}
+				</select>
 			</div>
 
 			<div class="form-group">
@@ -64,7 +52,6 @@
 					type="number"
 					id="size"
 					name="size"
-					bind:value={size}
 					min="0"
 					step="1"
 					placeholder="e.g., 100000"
