@@ -1,0 +1,18 @@
+{
+	"svelte.enable-ts-plugin": true,
+	"workbench.colorTheme": "Dracula Theme",
+	"sqltools.connections": [
+		{
+			"name": "Pipeline",
+			"driver": "PostgreSQL",
+			"server": "localhost",
+			"port": 5432,
+			"socketPath": "/var/run/postgresql",
+			"database": "pipeline",
+			"username": "postgres",
+			"password": "",
+			"ssh": "Disabled",
+			"previewLimit": 50
+		}
+	]
+}
