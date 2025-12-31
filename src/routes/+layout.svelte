@@ -17,6 +17,14 @@
 			<li><a href="/workloads">Workloads</a></li>
 			<li><a href="/events">Events</a></li>
 		</ul>
+		<form method="GET" action="/search" class="search-form">
+			<input
+				type="search"
+				name="q"
+				placeholder="Search..."
+				class="search-input"
+			/>
+		</form>
 		<button class="quick-event-btn" onclick={() => quick_event_modal.open()}>
 			+ Quick Event
 		</button>
@@ -71,6 +79,31 @@
 
 	li a:hover {
 		color: white;
+	}
+
+	.search-form {
+		margin: 0;
+		padding: 0;
+	}
+
+	.search-input {
+		padding: 0.4rem 0.75rem;
+		font-size: 0.9rem;
+		border: 1px solid #555;
+		border-radius: 4px;
+		background-color: #444;
+		color: white;
+		width: 200px;
+	}
+
+	.search-input::placeholder {
+		color: #aaa;
+	}
+
+	.search-input:focus {
+		outline: none;
+		border-color: #0066cc;
+		background-color: #555;
 	}
 
 	.quick-event-btn {

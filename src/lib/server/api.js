@@ -812,3 +812,93 @@ export async function search_entities(search_term, limit = 10, type_filter = nul
 	);
 	return result.rows;
 }
+
+// =============================================================================
+// Global Search
+// =============================================================================
+
+/**
+ * @typedef {object} GlobalSearchResult
+ * @property {'customer' | 'workload' | 'event'} type
+ * @property {string} id
+ * @property {string} label
+ * @property {string} name
+ * @property {string} subtitle
+ * @property {number} rank - Relevance ranking (lower is better)
+ */
+
+/**
+ * Global search across customers, workloads, and events using PostgreSQL full-text search
+ * @param {string} search_term
+ * @param {number} [limit=50]
+ * @returns {Promise<GlobalSearchResult[]>}
+ */
+export async function global_search(search_term, limit = 50) {
+	if (!search_term || search_term.trim().length === 0) {
+		return [];
+	}
+
+	const query_text = search_term.trim().replace(/[^\w\s]/g, ' ').split(/\s+/).filter(w => w.length > 0).map(w => w + ':*').join(' & ');
+
+	const result = await query(
+		`
+		WITH search_results AS (
+			SELECT
+				'customer' as type,
+				customer as id,
+				label,
+				name,
+				COALESCE(region, '') || CASE WHEN region IS NOT NULL AND segment IS NOT NULL THEN ' / ' ELSE '' END || COALESCE(segment, '') as subtitle,
+				ts_rank(
+					to_tsvector('english', name || ' ' || label),
+					to_tsquery('english', $1)
+				) as rank
+			FROM customers
+			WHERE to_tsvector('english', name || ' ' || label) @@ to_tsquery('english', $1)
+
+			UNION ALL
+
+			SELECT
+				'workload' as type,
+				w.workload as id,
+				w.label,
+				w.name,
+				c.name as subtitle,
+				ts_rank(
+					to_tsvector('english', w.name || ' ' || w.label),
+					to_tsquery('english', $1)
+				) as rank
+			FROM workloads w
+			JOIN customers c ON w.customer = c.customer
+			WHERE to_tsvector('english', w.name || ' ' || w.label) @@ to_tsquery('english', $1)
+
+			UNION ALL
+
+			SELECT
+				'event' as type,
+				e.event as id,
+				COALESCE(c.label, w.label, '') as label,
+				LEFT(e.outcome, 100) as name,
+				CASE
+					WHEN c.name IS NOT NULL THEN 'Customer: ' || c.name
+					WHEN w.name IS NOT NULL THEN 'Workload: ' || w.name
+					ELSE 'Unknown'
+				END as subtitle,
+				ts_rank(
+					to_tsvector('english', e.outcome),
+					to_tsquery('english', $1)
+				) * 0.5 as rank
+			FROM events e
+			LEFT JOIN customers c ON e.customer = c.customer
+			LEFT JOIN workloads w ON e.workload = w.workload
+			WHERE to_tsvector('english', e.outcome) @@ to_tsquery('english', $1)
+		)
+		SELECT * FROM search_results
+		ORDER BY rank DESC, name ASC
+		LIMIT $2
+	`,
+		[query_text, limit]
+	);
+
+	return result.rows;
+}
