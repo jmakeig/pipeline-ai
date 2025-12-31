@@ -564,6 +564,40 @@ export async function get_all_events() {
 }
 
 /**
+ * Get paginated events with related entity names
+ * @param {number} [page=1] - Page number (1-indexed)
+ * @param {number} [page_size=50] - Number of events per page
+ * @returns {Promise<{events: import('$lib/types').EventWithNames[], total: number, page: number, page_size: number, total_pages: number}>}
+ */
+export async function get_events_paginated(page = 1, page_size = 50) {
+	const offset = (page - 1) * page_size;
+
+	const count_result = await query('SELECT COUNT(*) as count FROM events');
+	const total = parseInt(count_result.rows[0].count, 10);
+
+	const result = await query(
+		`SELECT
+			e.*,
+			c.name as customer_name,
+			w.name as workload_name
+		FROM events e
+		LEFT JOIN customers c ON e.customer = c.customer
+		LEFT JOIN workloads w ON e.workload = w.workload
+		ORDER BY e.happened_at DESC
+		LIMIT $1 OFFSET $2`,
+		[page_size, offset]
+	);
+
+	return {
+		events: result.rows,
+		total,
+		page,
+		page_size,
+		total_pages: Math.ceil(total / page_size)
+	};
+}
+
+/**
  * Get an event by UUID
  * @param {string} id
  * @returns {Promise<import('$lib/types').EventWithNames | null>}

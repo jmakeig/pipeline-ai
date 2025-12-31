@@ -15,6 +15,7 @@
 		<ul>
 			<li><a href="/customers">Customers</a></li>
 			<li><a href="/workloads">Workloads</a></li>
+			<li><a href="/events">Events</a></li>
 		</ul>
 		<button class="quick-event-btn" onclick={() => quick_event_modal.open()}>
 			+ Quick Event
