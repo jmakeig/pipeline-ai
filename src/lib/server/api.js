@@ -828,17 +828,28 @@ export async function search_entities(search_term, limit = 10, type_filter = nul
  */
 
 /**
+ * @typedef {object} GlobalSearchResponse
+ * @property {GlobalSearchResult[]} results
+ * @property {{ customer: number, workload: number, event: number }} facets
+ */
+
+/**
  * Global search across customers, workloads, and events using PostgreSQL full-text search
  * @param {string} search_term
+ * @param {string | null} [type_filter=null] - Filter by 'customer', 'workload', or 'event'
  * @param {number} [limit=50]
- * @returns {Promise<GlobalSearchResult[]>}
+ * @returns {Promise<GlobalSearchResponse>}
  */
-export async function global_search(search_term, limit = 50) {
+export async function global_search(search_term, type_filter = null, limit = 50) {
 	if (!search_term || search_term.trim().length === 0) {
-		return [];
+		return { results: [], facets: { customer: 0, workload: 0, event: 0 } };
 	}
 
 	const query_text = search_term.trim().replace(/[^\w\s]/g, ' ').split(/\s+/).filter(w => w.length > 0).map(w => w + ':*').join(' & ');
+
+	// Build the WHERE clause for type filtering
+	const type_condition = type_filter ? `WHERE type = $3` : '';
+	const params = type_filter ? [query_text, limit, type_filter] : [query_text, limit];
 
 	const result = await query(
 		`
@@ -892,13 +903,38 @@ export async function global_search(search_term, limit = 50) {
 			LEFT JOIN customers c ON e.customer = c.customer
 			LEFT JOIN workloads w ON e.workload = w.workload
 			WHERE to_tsvector('english', e.outcome) @@ to_tsquery('english', $1)
+		),
+		facet_counts AS (
+			SELECT
+				COUNT(*) FILTER (WHERE type = 'customer') as customer_count,
+				COUNT(*) FILTER (WHERE type = 'workload') as workload_count,
+				COUNT(*) FILTER (WHERE type = 'event') as event_count
+			FROM search_results
+		),
+		filtered_results AS (
+			SELECT * FROM search_results
+			${type_condition}
+			ORDER BY rank DESC, name ASC
+			LIMIT $2
 		)
-		SELECT * FROM search_results
-		ORDER BY rank DESC, name ASC
-		LIMIT $2
+		SELECT
+			json_build_object(
+				'results', COALESCE(json_agg(filtered_results.* ORDER BY filtered_results.rank DESC, filtered_results.name ASC), '[]'::json),
+				'facets', json_build_object(
+					'customer', facet_counts.customer_count,
+					'workload', facet_counts.workload_count,
+					'event', facet_counts.event_count
+				)
+			) as data
+		FROM filtered_results, facet_counts
+		GROUP BY facet_counts.customer_count, facet_counts.workload_count, facet_counts.event_count
 	`,
-		[query_text, limit]
+		params
 	);
 
-	return result.rows;
+	if (result.rows.length === 0) {
+		return { results: [], facets: { customer: 0, workload: 0, event: 0 } };
+	}
+
+	return result.rows[0].data;
 }

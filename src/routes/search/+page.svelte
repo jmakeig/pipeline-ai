@@ -55,10 +55,41 @@
 </form>
 
 {#if data.q}
+	<div class="facets">
+		<a
+			href="/search?q={encodeURIComponent(data.q)}"
+			class="facet"
+			class:active={!data.type}
+		>
+			All ({data.facets.customer + data.facets.workload + data.facets.event})
+		</a>
+		<a
+			href="/search?q={encodeURIComponent(data.q)}&type=customer"
+			class="facet"
+			class:active={data.type === 'customer'}
+		>
+			Customers ({data.facets.customer})
+		</a>
+		<a
+			href="/search?q={encodeURIComponent(data.q)}&type=workload"
+			class="facet"
+			class:active={data.type === 'workload'}
+		>
+			Workloads ({data.facets.workload})
+		</a>
+		<a
+			href="/search?q={encodeURIComponent(data.q)}&type=event"
+			class="facet"
+			class:active={data.type === 'event'}
+		>
+			Events ({data.facets.event})
+		</a>
+	</div>
+
 	{#if data.results.length === 0}
 		<p class="no-results">No results found for "{data.q}"</p>
 	{:else}
-		<p class="results-count">Found {data.results.length} result{data.results.length === 1 ? '' : 's'}</p>
+		<p class="results-count">Showing {data.results.length} result{data.results.length === 1 ? '' : 's'}</p>
 
 		<div class="results">
 			{#each data.results as result}
@@ -112,6 +143,41 @@
 
 	.search-btn:hover {
 		background-color: #0055aa;
+	}
+
+	.facets {
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 1.5rem;
+		padding-bottom: 1rem;
+		border-bottom: 1px solid #ddd;
+	}
+
+	.facet {
+		padding: 0.5rem 1rem;
+		background-color: #f5f5f5;
+		color: #333;
+		text-decoration: none;
+		border-radius: 4px;
+		border: 1px solid #ddd;
+		font-size: 0.9rem;
+		transition: all 0.2s;
+	}
+
+	.facet:hover {
+		background-color: #e5e5e5;
+		border-color: #ccc;
+	}
+
+	.facet.active {
+		background-color: #0066cc;
+		color: white;
+		border-color: #0066cc;
+	}
+
+	.facet.active:hover {
+		background-color: #0055aa;
+		border-color: #0055aa;
 	}
 
 	.results-count {
