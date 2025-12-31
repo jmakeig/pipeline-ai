@@ -1,5 +1,6 @@
 {
 	"svelte.enable-ts-plugin": true,
+	"window.autoDetectColorScheme": false,
 	"workbench.colorTheme": "Dracula Theme",
 	"sqltools.connections": [
 		{
